@@ -37,34 +37,43 @@ export default function Home({ user, cart, setCart }) {
         {products.map((product) => (
           <div
             key={product._id}
+            className="product-card"
             style={{
               background: "white",
               borderRadius: "15px",
               padding: "20px",
               boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-              transition: "0.3s",
+              transition: "all 0.3s ease",
+              cursor: "pointer",
             }}
           >
-            {/* PRODUCT IMAGE */}
-            <img
-              src={
-                product.image ||
-                "https://via.placeholder.com/250x180.png?text=Product"
-              }
-              alt={product.name}
+            {/* IMAGE */}
+            <div
               style={{
-                width: "100%",
-                height: "180px",
-                objectFit: "cover",
+                overflow: "hidden",
                 borderRadius: "10px",
-                marginBottom: "15px",
               }}
-            />
+            >
+              <img
+                src={
+                  product.image ||
+                  "https://via.placeholder.com/250x180.png?text=Product"
+                }
+                alt={product.name}
+                style={{
+                  width: "100%",
+                  height: "220px",
+                  objectFit: "cover",
+                  transition: "transform 0.3s ease",
+                }}
+                className="product-image"
+              />
+            </div>
 
-            {/* PRODUCT INFO */}
+            {/* INFO */}
             <h3
               style={{
-                margin: "10px 0",
+                marginTop: "15px",
                 color: "#111827",
               }}
             >
@@ -83,7 +92,6 @@ export default function Home({ user, cart, setCart }) {
             <h2
               style={{
                 color: "#2563eb",
-                marginBottom: "15px",
               }}
             >
               ₹{product.price}
@@ -108,11 +116,30 @@ export default function Home({ user, cart, setCart }) {
                 borderRadius: "8px",
                 cursor: "pointer",
                 fontWeight: "bold",
-                fontSize: "15px",
+                marginTop: "10px",
+                transition: "0.3s",
               }}
             >
               Add to Cart
             </button>
+
+            {/* HOVER STYLES */}
+            <style>
+              {`
+                .product-card:hover {
+                  transform: translateY(-8px);
+                  box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+                }
+
+                .product-card:hover .product-image {
+                  transform: scale(1.05);
+                }
+
+                button:hover {
+                  opacity: 0.9;
+                }
+              `}
+            </style>
           </div>
         ))}
       </div>

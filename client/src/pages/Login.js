@@ -27,6 +27,11 @@ export default function Login({ user, setUser }) {
 
     if (data.user) {
       setUser(data.user);
+
+localStorage.setItem(
+  "user",
+  JSON.stringify(data.user)
+);
       navigate("/");
     } else {
       alert("Invalid credentials");
