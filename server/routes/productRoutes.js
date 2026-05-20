@@ -24,26 +24,27 @@ router.get("/", async (req, res) => {
 });
 
 // Delete Product
-router.delete("/:id", async (req, res) => {
+router.delete("/delete/:id", async (req, res) => {
   try {
     await Product.findByIdAndDelete(req.params.id);
     res.json({ message: "Product deleted" });
-  } catch (err) {
-    res.status(500).json(err);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
 // Update Product
-router.put("/:id", async (req, res) => {
+router.put("/update/:id", async (req, res) => {
   try {
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { returnDocument: "after" }
+      { new: true }
     );
+
     res.json(updatedProduct);
-  } catch (err) {
-    res.status(500).json(err);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
