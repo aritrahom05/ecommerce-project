@@ -27,11 +27,12 @@ export default function Cart({ user, cart, setCart }) {
       key: "rzp_test_Sc5yEFzMokiaFH",
       amount: orderData.amount,
       currency: "INR",
-      name: "AriKart",
-      description: "Order Payment",
+      name: "Ecart",
+      description: "Ecart Order Payment",
       order_id: orderData.id,
 
       handler: async function (response) {
+        
         await fetch("http://localhost:5000/api/orders", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -39,7 +40,9 @@ export default function Cart({ user, cart, setCart }) {
             userId: user._id,
             products: cart,
             total,
-            paymentId: response.razorpay_payment_id,
+            paymentId:
+  response.razorpay_payment_id ||
+  "Payment Successful",
           }),
         });
 

@@ -1,10 +1,20 @@
-import { Link } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
 
-export default function Navbar({ user, setUser, cart }) {
+export default function Navbar({
+  user,
+  setUser,
+  cart,
+  setCart,
+}) {
+  const navigate = useNavigate();
+
   return (
     <nav
       style={{
-        background: "#111827",
+        background: "#0f172a",
         color: "white",
         padding: "15px 30px",
         display: "flex",
@@ -16,9 +26,19 @@ export default function Navbar({ user, setUser, cart }) {
       }}
     >
       {/* LOGO */}
-      <h2 style={{ margin: 0 }}>AriKart 🛒</h2>
+      <Link
+        to="/"
+        style={{
+          textDecoration: "none",
+          color: "white",
+        }}
+      >
+        <h2 style={{ margin: 0 }}>
+          Ecart 🛒
+        </h2>
+      </Link>
 
-      {/* LINKS */}
+      {/* NAV LINKS */}
       <div
         style={{
           display: "flex",
@@ -26,52 +46,52 @@ export default function Navbar({ user, setUser, cart }) {
           alignItems: "center",
         }}
       >
-        <Link style={linkStyle} to="/">
-          Home
-        </Link>
-
-        {/* CART BADGE */}
+        {/* CART */}
         <Link style={linkStyle} to="/cart">
           Cart {cart.length > 0 && `(${cart.length})`}
         </Link>
 
-        <Link style={linkStyle} to="/orders">
-          Orders
-        </Link>
-
         {!user ? (
           <>
+            {/* LOGIN */}
             <Link style={linkStyle} to="/login">
               Login
             </Link>
 
-            <Link style={linkStyle} to="/register">
-              Register
-            </Link>
+            
           </>
         ) : (
           <>
-            <span
+            {/* PROFILE */}
+            <Link
+              to="/profile"
               style={{
-                background: "#1f2937",
-                padding: "8px 12px",
+                textDecoration: "none",
+                color: "white",
+                background: "#1e293b",
+                padding: "8px 14px",
                 borderRadius: "20px",
+                fontWeight: "bold",
               }}
             >
-              Hi, {user.name}
-            </span>
+              👤 {user.name}
+            </Link>
 
+            {/* LOGOUT */}
             <button
               onClick={() => {
-  setUser(null);
-  localStorage.removeItem("user");
-localStorage.removeItem("cart");
-}}
+                setUser(null);
+                setCart([]);
+
+                localStorage.removeItem("user");
+
+                navigate("/");
+              }}
               style={{
                 background: "#ef4444",
                 color: "white",
                 border: "none",
-                padding: "8px 15px",
+                padding: "10px 16px",
                 borderRadius: "8px",
                 cursor: "pointer",
                 fontWeight: "bold",
@@ -90,5 +110,4 @@ const linkStyle = {
   color: "white",
   textDecoration: "none",
   fontWeight: "bold",
-  transition: "0.3s",
 };
