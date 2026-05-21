@@ -1,43 +1,61 @@
 const express = require("express");
+
 const router = express.Router();
+
 const Order = require("../models/Order");
+
 
 // CREATE ORDER
 router.post("/", async (req, res) => {
   try {
+    
+
     const {
       userId,
-      products,
-      total,
+      items,
+      totalAmount,
       paymentId,
     } = req.body;
 
-    const order = new Order({
+    const newOrder = new Order({
       userId,
-      products,
-      total,
+      items,
+      totalAmount,
       paymentId,
     });
 
-    const savedOrder = await order.save();
+    const savedOrder =
+      await newOrder.save();
 
-    res.json(savedOrder);
+    res.status(201).json(
+      savedOrder
+    );
   } catch (err) {
+    console.log(err);
+
     res.status(500).json({
-      message: err.message,
+      message:
+        "Order save failed",
     });
   }
 });
 
-// GET ALL ORDERS
+
+// GET ORDERS
 router.get("/", async (req, res) => {
   try {
-    const orders = await Order.find();
+    const orders =
+      await Order.find().sort({
+        createdAt: -1,
+      });
 
     res.json(orders);
   } catch (err) {
+    console.log(err);
+
     res.status(500).json({
-      message: err.message,
+      message:
+        "Failed to fetch orders",
     });
   }
 });

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import { useEffect, useState } from "react";
 
 import Navbar from "./components/Navbar";
@@ -9,34 +10,40 @@ import Register from "./pages/Register";
 import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
 import Profile from "./pages/Profile";
+import ProductDetails from "./pages/ProductDetails";
 
 // LOAD SAVED USER
 const savedUser = localStorage.getItem("user");
+
 const parsedUser = savedUser
   ? JSON.parse(savedUser)
   : null;
 
 function App() {
   // USER STATE
-  const [user, setUser] = useState(parsedUser);
+  const [user, setUser] =
+    useState(parsedUser);
 
   // CART STATE
-  const [cart, setCart] = useState(() => {
-    if (parsedUser) {
-      const savedCart = localStorage.getItem(
-        `cart_${parsedUser._id}`
-      );
+  const [cart, setCart] =
+    useState(() => {
+      if (parsedUser) {
+        const savedCart =
+          localStorage.getItem(
+            `cart_${parsedUser._id}`
+          );
 
-      return savedCart
-        ? JSON.parse(savedCart)
-        : [];
-    }
+        return savedCart
+          ? JSON.parse(savedCart)
+          : [];
+      }
 
-    return [];
-  });
+      return [];
+    });
 
   // ORDERS STATE
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] =
+    useState([]);
 
   // SAVE USER
   useEffect(() => {
@@ -62,12 +69,17 @@ function App() {
   useEffect(() => {
     if (!user) return;
 
-    fetch("http://localhost:5000/api/orders")
+    fetch(
+      "http://localhost:5000/api/orders"
+    )
       .then((res) => res.json())
       .then((data) => {
-        const userOrders = data.filter(
-          (order) => order.userId === user._id
-        );
+        const userOrders =
+          data.filter(
+            (order) =>
+              order.userId ===
+              user._id
+          );
 
         setOrders(userOrders);
       });
@@ -75,6 +87,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      {/* NAVBAR */}
       <Navbar
         user={user}
         setUser={setUser}
@@ -110,7 +123,11 @@ function App() {
         {/* REGISTER */}
         <Route
           path="/register"
-          element={<Register user={user} />}
+          element={
+            <Register
+              user={user}
+            />
+          }
         />
 
         {/* CART */}
@@ -128,7 +145,9 @@ function App() {
         {/* ORDERS */}
         <Route
           path="/orders"
-          element={<Orders user={user} />}
+          element={
+            <Orders user={user} />
+          }
         />
 
         {/* PROFILE */}
@@ -139,6 +158,18 @@ function App() {
               user={user}
               cart={cart}
               orders={orders}
+            />
+          }
+        />
+
+        {/* PRODUCT DETAILS */}
+        <Route
+          path="/product/:id"
+          element={
+            <ProductDetails
+              user={user}
+              cart={cart}
+              setCart={setCart}
             />
           }
         />

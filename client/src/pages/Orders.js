@@ -1,29 +1,21 @@
 import { useEffect, useState } from "react";
 
-export default function Orders({ user }) {
-  const [orders, setOrders] = useState([]);
+export default function Orders() {
+  const [orders, setOrders] =
+    useState([]);
 
   useEffect(() => {
-    if (!user) return;
-
-    fetch("http://localhost:5000/api/orders")
+    fetch(
+      "http://localhost:5000/api/orders"
+    )
       .then((res) => res.json())
       .then((data) => {
-        const userOrders = data.filter(
-          (order) => order.userId === user._id
-        );
-
-        setOrders(userOrders);
+        setOrders(data);
+      })
+      .catch((err) => {
+        console.log(err);
       });
-  }, [user]);
-
-  if (!user) {
-    return (
-      <div style={{ padding: "40px" }}>
-        <h2>Please login to view orders</h2>
-      </div>
-    );
-  }
+  }, []);
 
   return (
     <div
@@ -36,97 +28,163 @@ export default function Orders({ user }) {
       <h1
         style={{
           marginBottom: "30px",
-          color: "#111827",
+          fontSize: "48px",
         }}
       >
         My Orders 📦
       </h1>
 
-      {orders.length === 0 ? (
-        <div
-          style={{
-            background: "white",
-            padding: "30px",
-            borderRadius: "15px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-          }}
-        >
-          <h2>No orders yet 😢</h2>
-        </div>
-      ) : (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "20px",
-          }}
-        >
-          {orders.map((order) => (
+      {orders.length === 0 && (
+        <h2>No Orders Yet</h2>
+      )}
+
+      {orders.map(
+        (order, index) => (
+          <div
+            key={index}
+            style={{
+              background:
+                "white",
+              padding: "20px",
+              borderRadius:
+                "18px",
+              marginBottom:
+                "20px",
+              boxShadow:
+                "0 4px 12px rgba(0,0,0,0.08)",
+            }}
+          >
+            {/* TOP INFO */}
             <div
-              key={order._id}
               style={{
-                background: "white",
-                padding: "25px",
-                borderRadius: "15px",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                display: "flex",
+                justifyContent:
+                  "space-between",
+                alignItems:
+                  "center",
+                marginBottom:
+                  "20px",
+                flexWrap: "wrap",
+                gap: "10px",
               }}
             >
               <h2
                 style={{
-                  color: "#2563eb",
+                  color:
+                    "#2563eb",
+                  margin: 0,
                 }}
               >
-                ₹{order.total}
+                ₹
+                {order.totalAmount ||
+                  0}
               </h2>
 
-              <p>
-                <strong>Items:</strong>{" "}
-                {order.products.length}
-              </p>
-
-              <p>
-                <strong>Payment ID:</strong>{" "}
-                {order.paymentId || "Payment Successful"}
-              </p>
-
-              <div
+              <h3
                 style={{
-                  marginTop: "15px",
-                  display: "flex",
-                  gap: "15px",
-                  flexWrap: "wrap",
+                  margin: 0,
                 }}
               >
-                {order.products.map((product, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      width: "150px",
-                      background: "#f9fafb",
-                      borderRadius: "10px",
-                      padding: "10px",
-                    }}
-                  >
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      style={{
-                        width: "100%",
-                        height: "120px",
-                        objectFit: "cover",
-                        borderRadius: "8px",
-                      }}
-                    />
+                Items:{" "}
+                {order.items
+                  ? order.items
+                      .length
+                  : 0}
+              </h3>
 
-                    <h4>{product.name}</h4>
-
-                    <p>₹{product.price}</p>
-                  </div>
-                ))}
-              </div>
+              <p
+                style={{
+                  margin: 0,
+                  fontWeight:
+                    "bold",
+                }}
+              >
+                Payment ID:{" "}
+                {
+                  order.paymentId
+                }
+              </p>
             </div>
-          ))}
-        </div>
+
+            {/* PRODUCTS */}
+            <div
+              style={{
+                display: "flex",
+                gap: "15px",
+                overflowX:
+                  "auto",
+              }}
+            >
+              {order.items &&
+                order.items.map(
+                  (
+                    item,
+                    idx
+                  ) => (
+                    <div
+                      key={idx}
+                      style={{
+                        minWidth:
+                          "180px",
+                        background:
+                          "#f9fafb",
+                        padding:
+                          "12px",
+                        borderRadius:
+                          "15px",
+                      }}
+                    >
+                      <img
+                        src={
+                          item.image
+                        }
+                        alt={
+                          item.name
+                        }
+                        style={{
+                          width:
+                            "100%",
+                          height:
+                            "140px",
+                          objectFit:
+                            "cover",
+                          borderRadius:
+                            "12px",
+                        }}
+                      />
+
+                      <h3
+                        style={{
+                          marginTop:
+                            "10px",
+                          marginBottom:
+                            "5px",
+                        }}
+                      >
+                        {
+                          item.name
+                        }
+                      </h3>
+
+                      <p
+                        style={{
+                          color:
+                            "#2563eb",
+                          fontWeight:
+                            "bold",
+                        }}
+                      >
+                        ₹
+                        {
+                          item.price
+                        }
+                      </p>
+                    </div>
+                  )
+                )}
+            </div>
+          </div>
+        )
       )}
     </div>
   );

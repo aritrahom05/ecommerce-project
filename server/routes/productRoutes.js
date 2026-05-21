@@ -1,50 +1,79 @@
 const express = require("express");
+
 const router = express.Router();
+
 const Product = require("../models/Product");
 
-// Add Product
-router.post("/add", async (req, res) => {
-  try {
-    const product = new Product(req.body);
-    const saved = await product.save();
-    res.json(saved);
-  } catch (err) {
-    res.status(500).json(err);
-  }
-});
-
-// Get All Products
+// GET ALL PRODUCTS
 router.get("/", async (req, res) => {
   try {
-    const products = await Product.find();
+    const products =
+      await Product.find();
+
     res.json(products);
   } catch (err) {
     res.status(500).json(err);
   }
 });
 
-// Delete Product
-router.delete("/delete/:id", async (req, res) => {
+// GET SINGLE PRODUCT
+router.get("/:id", async (req, res) => {
   try {
-    await Product.findByIdAndDelete(req.params.id);
-    res.json({ message: "Product deleted" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    const product =
+      await Product.findById(
+        req.params.id
+      );
+
+    res.json(product);
+  } catch (err) {
+    res.status(500).json(err);
   }
 });
 
-// Update Product
-router.put("/update/:id", async (req, res) => {
+// CREATE PRODUCT
+router.post("/", async (req, res) => {
   try {
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const product =
+      new Product(req.body);
+
+    const savedProduct =
+      await product.save();
+
+    res.json(savedProduct);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+// UPDATE PRODUCT
+router.put("/:id", async (req, res) => {
+  try {
+    const updatedProduct =
+      await Product.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true }
+      );
 
     res.json(updatedProduct);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+// DELETE PRODUCT
+router.delete("/:id", async (req, res) => {
+  try {
+    await Product.findByIdAndDelete(
+      req.params.id
+    );
+
+    res.json({
+      message:
+        "Product deleted successfully",
+    });
+  } catch (err) {
+    res.status(500).json(err);
   }
 });
 

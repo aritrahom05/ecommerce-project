@@ -30,7 +30,7 @@ export default function Login({
 
   // ALREADY LOGGED IN
   if (user) {
-    return <Navigate to="/profile" />;
+    return <Navigate to="/" />;
   }
 
   // NORMAL LOGIN

@@ -47,9 +47,11 @@ export default function Navbar({
         }}
       >
         {/* CART */}
-        <Link style={linkStyle} to="/cart">
-          Cart {cart.length > 0 && `(${cart.length})`}
-        </Link>
+{user && (
+  <Link style={linkStyle} to="/cart">
+    Cart {cart.length > 0 && `(${cart.length})`}
+  </Link>
+)}
 
         {!user ? (
           <>

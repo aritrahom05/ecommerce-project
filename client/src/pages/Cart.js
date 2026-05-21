@@ -1,210 +1,350 @@
-export default function Cart({ user, cart, setCart }) {
-  const total = cart.reduce((sum, item) => sum + item.price, 0);
+import {
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 
-  const placeOrder = async () => {
-    if (!user) {
-      alert("Login first");
-      return;
-    }
+export default function Cart({
+  cart,
+  setCart,
+  user,
+}) {
+  const navigate =
+    useNavigate();
 
-    if (cart.length === 0) {
-      alert("Cart is empty");
-      return;
-    }
+  const location =
+    useLocation();
 
-    const orderRes = await fetch(
-      "http://localhost:5000/api/payment/create-order",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: total * 100 }),
-      }
+  // BUY NOW LOGIC
+  const queryParams =
+    new URLSearchParams(
+      location.search
     );
 
-    const orderData = await orderRes.json();
+  const isBuyNow =
+    queryParams.get(
+      "buyNow"
+    ) === "true";
 
-    const options = {
-      key: "rzp_test_Sc5yEFzMokiaFH",
-      amount: orderData.amount,
-      currency: "INR",
-      name: "Ecart",
-      description: "Ecart Order Payment",
-      order_id: orderData.id,
+  const buyNowProduct =
+    JSON.parse(
+      localStorage.getItem(
+        "buyNowProduct"
+      )
+    );
 
-      handler: async function (response) {
-        
-        await fetch("http://localhost:5000/api/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: user._id,
-            products: cart,
-            total,
-            paymentId:
-  response.razorpay_payment_id ||
-  "Payment Successful",
-          }),
-        });
+  const finalCart =
+    isBuyNow &&
+    buyNowProduct
+      ? [buyNowProduct]
+      : cart;
 
-        alert("Payment successful & order placed!");
+  // TOTAL
+  const total =
+    finalCart.reduce(
+      (acc, item) =>
+        acc + item.price,
+      0
+    );
 
-        setCart([]);
-      },
+  // REMOVE ITEM
+  const removeFromCart = (
+    index
+  ) => {
+    const updatedCart =
+      cart.filter(
+        (_, i) => i !== index
+      );
 
-      theme: {
-        color: "#2563eb",
-      },
-    };
-
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+    setCart(updatedCart);
   };
 
-  if (!user) {
-    return (
-      <div style={{ padding: "40px" }}>
-        <h2>Please login to view cart</h2>
-      </div>
-    );
-  }
+  // CHECKOUT
+  const handleCheckout =
+    async () => {
+      if (!user) {
+        alert(
+          "Please login first"
+        );
+
+        navigate("/login");
+
+        return;
+      }
+
+      const options = {
+        key: "rzp_test_Sc5yEFzMokiaFH",
+
+        amount: total * 100,
+
+        currency: "INR",
+
+        name: "Ecart",
+
+        description:
+          "Order Payment",
+
+        handler:
+          async function (
+            response
+          ) {
+            const orderData =
+              {
+                userId:
+                  user._id,
+
+                items:
+                  finalCart,
+
+                totalAmount:
+                  total,
+
+                paymentId:
+                  response.razorpay_payment_id,
+              };
+
+            await fetch(
+              "http://localhost:5000/api/orders",
+              {
+                method:
+                  "POST",
+
+                headers:
+                  {
+                    "Content-Type":
+                      "application/json",
+                  },
+
+                body: JSON.stringify(
+                  orderData
+                ),
+              }
+            );
+
+            // CLEAR NORMAL CART
+            if (
+              !isBuyNow
+            ) {
+              setCart([]);
+            }
+
+            // CLEAR BUY NOW PRODUCT
+            localStorage.removeItem(
+              "buyNowProduct"
+            );
+
+            navigate(
+              "/orders"
+            );
+          },
+
+        theme: {
+          color:
+            "#2563eb",
+        },
+      };
+
+      const razor =
+        new window.Razorpay(
+          options
+        );
+
+      razor.open();
+    };
 
   return (
     <div
       style={{
-        background: "#f3f4f6",
-        minHeight: "100vh",
         padding: "30px",
+        background:
+          "#f3f4f6",
+        minHeight: "100vh",
       }}
     >
       <h1
         style={{
-          marginBottom: "30px",
-          color: "#111827",
+          marginBottom:
+            "30px",
         }}
       >
         Shopping Cart 🛒
       </h1>
 
-      {cart.length === 0 ? (
-        <div
-          style={{
-            background: "white",
-            padding: "40px",
-            borderRadius: "15px",
-            textAlign: "center",
-            boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-          }}
-        >
-          <h2>Your cart is empty 😢</h2>
-        </div>
-      ) : (
-        <>
-          {/* CART ITEMS */}
+      {/* EMPTY CART */}
+      {finalCart.length ===
+        0 && (
+        <h2>
+          Your cart is empty
+        </h2>
+      )}
+
+      {/* CART ITEMS */}
+      {finalCart.map(
+        (item, index) => (
           <div
+            key={index}
             style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "20px",
+              background:
+                "white",
+              padding:
+                "20px",
+              borderRadius:
+                "20px",
+              marginBottom:
+                "20px",
+              display:
+                "flex",
+              justifyContent:
+                "space-between",
+              alignItems:
+                "center",
+              boxShadow:
+                "0 4px 12px rgba(0,0,0,0.1)",
             }}
           >
-            {cart.map((item, index) => (
-              <div
-                key={index}
-                style={{
-                  background: "white",
-                  borderRadius: "15px",
-                  padding: "20px",
-                  display: "flex",
-                  gap: "20px",
-                  alignItems: "center",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                }}
-              >
-                {/* IMAGE */}
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  style={{
-                    width: "120px",
-                    height: "120px",
-                    objectFit: "cover",
-                    borderRadius: "10px",
-                  }}
-                />
-
-                {/* INFO */}
-                <div style={{ flex: 1 }}>
-                  <h2>{item.name}</h2>
-
-                  <p
-                    style={{
-                      color: "#6b7280",
-                    }}
-                  >
-                    {item.description}
-                  </p>
-
-                  <h3
-                    style={{
-                      color: "#2563eb",
-                    }}
-                  >
-                    ₹{item.price}
-                  </h3>
-                </div>
-
-                {/* REMOVE BUTTON */}
-                <button
-                  onClick={() =>
-                    setCart(cart.filter((_, i) => i !== index))
-                  }
-                  style={{
-                    background: "#ef4444",
-                    color: "white",
-                    border: "none",
-                    padding: "10px 15px",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* TOTAL SECTION */}
-          <div
-            style={{
-              marginTop: "30px",
-              background: "white",
-              padding: "25px",
-              borderRadius: "15px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-            }}
-          >
-            <h2>Total: ₹{total}</h2>
-
-            <button
-              onClick={placeOrder}
+            <div
               style={{
-                marginTop: "15px",
-                width: "100%",
-                padding: "15px",
-                background: "#2563eb",
-                color: "white",
-                border: "none",
-                borderRadius: "10px",
-                fontSize: "16px",
-                fontWeight: "bold",
-                cursor: "pointer",
+                display:
+                  "flex",
+                gap: "20px",
+                alignItems:
+                  "center",
               }}
             >
-              Proceed to Checkout
-            </button>
+              <img
+                src={
+                  item.image
+                }
+                alt={
+                  item.name
+                }
+                style={{
+                  width:
+                    "120px",
+                  height:
+                    "120px",
+                  objectFit:
+                    "cover",
+                  borderRadius:
+                    "12px",
+                }}
+              />
+
+              <div>
+                <h2>
+                  {
+                    item.name
+                  }
+                </h2>
+
+                <p
+                  style={{
+                    color:
+                      "#6b7280",
+                  }}
+                >
+                  {
+                    item.description
+                  }
+                </p>
+
+                <h2
+                  style={{
+                    color:
+                      "#2563eb",
+                  }}
+                >
+                  ₹
+                  {
+                    item.price
+                  }
+                </h2>
+              </div>
+            </div>
+
+            {/* REMOVE BUTTON */}
+            {!isBuyNow && (
+              <button
+                onClick={() =>
+                  removeFromCart(
+                    index
+                  )
+                }
+                style={{
+                  background:
+                    "#ef4444",
+                  color:
+                    "white",
+                  border:
+                    "none",
+                  padding:
+                    "12px 18px",
+                  borderRadius:
+                    "10px",
+                  cursor:
+                    "pointer",
+                  fontWeight:
+                    "bold",
+                }}
+              >
+                Remove
+              </button>
+            )}
           </div>
-        </>
+        )
+      )}
+
+      {/* TOTAL */}
+      {finalCart.length >
+        0 && (
+        <div
+          style={{
+            background:
+              "white",
+            padding:
+              "30px",
+            borderRadius:
+              "20px",
+            marginTop:
+              "30px",
+            boxShadow:
+              "0 4px 12px rgba(0,0,0,0.1)",
+          }}
+        >
+          <h1>
+            Total: ₹
+            {total}
+          </h1>
+
+          <button
+            onClick={
+              handleCheckout
+            }
+            style={{
+              marginTop:
+                "20px",
+              width:
+                "100%",
+              padding:
+                "15px",
+              background:
+                "#2563eb",
+              color:
+                "white",
+              border:
+                "none",
+              borderRadius:
+                "12px",
+              fontSize:
+                "18px",
+              fontWeight:
+                "bold",
+              cursor:
+                "pointer",
+            }}
+          >
+            Proceed to Checkout
+          </button>
+        </div>
       )}
     </div>
   );

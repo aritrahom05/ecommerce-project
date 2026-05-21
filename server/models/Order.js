@@ -1,28 +1,41 @@
-const mongoose = require("mongoose");
+const mongoose =
+  require("mongoose");
 
-const orderSchema = new mongoose.Schema(
-  {
-    userId: String,
-
-    products: [
-      {
-        name: String,
-        price: Number,
-        description: String,
-        image: String,
+const orderSchema =
+  new mongoose.Schema(
+    {
+      userId: {
+        type: String,
       },
-    ],
 
-    total: Number,
+      items: [
+        {
+          name: String,
 
-    paymentId: String,
-  },
-  {
-    timestamps: true,
-  }
-);
+          price: Number,
 
-module.exports = mongoose.model(
-  "Order",
-  orderSchema
-);
+          image: String,
+
+          description:
+            String,
+        },
+      ],
+
+      totalAmount: {
+        type: Number,
+      },
+
+      paymentId: {
+        type: String,
+      },
+    },
+    {
+      timestamps: true,
+    }
+  );
+
+module.exports =
+  mongoose.model(
+    "Order",
+    orderSchema
+  );
