@@ -44,9 +44,22 @@ export default function Register({
       return;
     }
 
-    if (password.length < 6) {
+    const emailRegex =
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
       setMessage(
-        "Password must be at least 6 characters"
+        "Please enter a valid email address"
+      );
+      return;
+    }
+
+    const passwordRegex =
+      /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+
+    if (!passwordRegex.test(password)) {
+      setMessage(
+        " Password must contain at least 8 characters, 1 uppercase letter, 1 number and 1 special character"
       );
       return;
     }

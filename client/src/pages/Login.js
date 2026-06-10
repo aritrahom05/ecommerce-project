@@ -18,6 +18,7 @@ export default function Login({
   user,
   setUser,
   setCart,
+  setWishlist,
 }) {
   const [email, setEmail] =
     useState("");
@@ -68,6 +69,11 @@ export default function Login({
           JSON.stringify(data.user)
         );
 
+        localStorage.setItem(
+          "token",
+          data.token
+        );
+
         // LOAD CART
         const savedCart =
           localStorage.getItem(
@@ -79,6 +85,19 @@ export default function Login({
             ? JSON.parse(savedCart)
             : []
         );
+
+        const savedWishlist =
+          localStorage.getItem(
+            `wishlist_${data.user._id}`
+          );
+
+        if (setWishlist) {
+          setWishlist(
+            savedWishlist
+              ? JSON.parse(savedWishlist)
+              : []
+          );
+        }
       } else {
         setMessage(
           "Invalid email or password"
@@ -104,8 +123,7 @@ export default function Login({
 
         const userData = {
           _id: googleUser.uid,
-          name:
-            googleUser.displayName,
+          name: googleUser.displayName,
           email: googleUser.email,
         };
 
@@ -126,6 +144,19 @@ export default function Login({
             ? JSON.parse(savedCart)
             : []
         );
+
+        const savedWishlist =
+          localStorage.getItem(
+            `wishlist_${googleUser.uid}`
+          );
+
+        if (setWishlist) {
+          setWishlist(
+            savedWishlist
+              ? JSON.parse(savedWishlist)
+              : []
+          );
+        }
       } catch (err) {
         console.log(err);
 
@@ -225,6 +256,22 @@ export default function Login({
         >
           Login
         </button>
+
+        <p
+          style={{
+            textAlign: "right",
+            marginTop: "10px",
+          }}
+        >
+          <Link
+            to="/forgot-password"
+            style={{
+              color: "white",
+            }}
+          >
+            Forgot Password?
+          </Link>
+        </p>
 
         {/* OR */}
         <div

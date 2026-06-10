@@ -1,16 +1,32 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Routes,
+  Route,
+} from "react-router-dom";
 
 import { useEffect, useState } from "react";
 
 import Navbar from "./components/Navbar";
+import AdminRoute from "./components/AdminRoute";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
 import Profile from "./pages/Profile";
 import ProductDetails from "./pages/ProductDetails";
+import Wishlist from "./pages/Wishlist";
+import AddAddress from "./pages/AddAddress";
+import SavedAddresses from "./pages/SavedAddresses";
+import AdminLogin from "./pages/admin/adminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminOrders from "./pages/admin/AdminOrders";
+
 
 // LOAD SAVED USER
 const savedUser = localStorage.getItem("user");
@@ -41,6 +57,22 @@ function App() {
       return [];
     });
 
+  const [wishlist, setWishlist] =
+    useState(() => {
+      if (parsedUser) {
+        const savedWishlist =
+          localStorage.getItem(
+            `wishlist_${parsedUser._id}`
+          );
+
+        return savedWishlist
+          ? JSON.parse(savedWishlist)
+          : [];
+      }
+
+      return [];
+    });
+
   // ORDERS STATE
   const [orders, setOrders] =
     useState([]);
@@ -64,6 +96,15 @@ function App() {
       );
     }
   }, [cart, user]);
+
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem(
+        `wishlist_${user._id}`,
+        JSON.stringify(wishlist)
+      );
+    }
+  }, [wishlist, user]);
 
   // FETCH USER ORDERS
   useEffect(() => {
@@ -93,6 +134,8 @@ function App() {
         setUser={setUser}
         cart={cart}
         setCart={setCart}
+        wishlist={wishlist}
+        setWishlist={setWishlist}
       />
 
       <Routes>
@@ -104,6 +147,8 @@ function App() {
               user={user}
               cart={cart}
               setCart={setCart}
+              wishlist={wishlist}
+              setWishlist={setWishlist}
             />
           }
         />
@@ -116,6 +161,7 @@ function App() {
               user={user}
               setUser={setUser}
               setCart={setCart}
+              setWishlist={setWishlist}
             />
           }
         />
@@ -128,6 +174,16 @@ function App() {
               user={user}
             />
           }
+        />
+
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+
+        <Route
+          path="/reset-password/:email"
+          element={<ResetPassword />}
         />
 
         {/* CART */}
@@ -150,6 +206,31 @@ function App() {
           }
         />
 
+        {/* WISHLIST */}
+        <Route
+          path="/wishlist"
+          element={
+            <Wishlist
+              user={user}
+              wishlist={wishlist}
+              setWishlist={setWishlist}
+              cart={cart}
+              setCart={setCart}
+            />
+          }
+        />
+
+{/* Address */}
+        <Route
+          path="/address"
+          element={<AddAddress />}
+        />
+
+        <Route
+          path="/address/edit/:id"
+          element={<AddAddress />}
+        />
+
         {/* PROFILE */}
         <Route
           path="/profile"
@@ -162,6 +243,11 @@ function App() {
           }
         />
 
+        <Route
+  path="/saved-addresses"
+  element={<SavedAddresses />}
+/>
+
         {/* PRODUCT DETAILS */}
         <Route
           path="/product/:id"
@@ -170,7 +256,68 @@ function App() {
               user={user}
               cart={cart}
               setCart={setCart}
+              wishlist={wishlist}
+              setWishlist={setWishlist}
             />
+          }
+        />
+
+        {/* ADMIN DASHBOARD */}
+        <Route
+          path="/admin"
+          element={
+            user?.isAdmin ? (
+              <Navigate
+                to="/admin/dashboard"
+                replace
+              />
+            ) : (
+              <Navigate
+                to="/admin/login"
+                replace
+              />
+            )
+          }
+        />
+
+        {/* ADMIN LOGIN */}
+        <Route
+          path="/admin/login"
+          element={
+            <AdminLogin
+              user={user}
+              setUser={setUser}
+            />
+          }
+        />
+
+        {/* ADMIN DASHBOARD */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <AdminRoute user={user}>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+
+        {/* ADMIN PRODUCTS */}
+        <Route
+          path="/admin/products"
+          element={
+            <AdminRoute user={user}>
+              <AdminProducts />
+            </AdminRoute>
+          }
+        />
+
+        {/* ADMIN ORDERS */}
+        <Route
+          path="/admin/orders"
+          element={
+            <AdminRoute user={user}>
+              <AdminOrders />
+            </AdminRoute>
           }
         />
       </Routes>

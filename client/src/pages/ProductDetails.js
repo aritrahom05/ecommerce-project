@@ -9,8 +9,11 @@ import {
 } from "react";
 
 export default function ProductDetails({
+  user,
   cart,
   setCart,
+  wishlist,
+  setWishlist,
 }) {
   const { id } =
     useParams();
@@ -20,6 +23,35 @@ export default function ProductDetails({
 
   const [product, setProduct] =
     useState(null);
+
+  const isWishlisted =
+    product &&
+    wishlist.some(
+      (item) => item._id === product._id
+    );
+
+  const toggleWishlist = () => {
+    if (!user) {
+      alert("Please login first");
+      navigate("/login");
+      return;
+    }
+
+    if (isWishlisted) {
+      setWishlist(
+        wishlist.filter(
+          (item) =>
+            item._id !== product._id
+        )
+      );
+      return;
+    }
+
+    setWishlist([
+      ...wishlist,
+      product,
+    ]);
+  };
 
   // FETCH PRODUCT
   useEffect(() => {
@@ -55,6 +87,28 @@ export default function ProductDetails({
 
   // ADD TO CART
   const addToCart = () => {
+    if (product.stock <= 0) {
+      alert(
+        "Product is out of stock"
+      );
+      return;
+    }
+
+    const alreadyInCart =
+      cart.filter(
+        (item) =>
+          item._id === product._id
+      ).length;
+
+    if (
+      alreadyInCart >= product.stock
+    ) {
+      alert(
+        `Only ${product.stock} stock available`
+      );
+      return;
+    }
+
     setCart([
       ...cart,
       product,
@@ -63,6 +117,13 @@ export default function ProductDetails({
 
   // BUY NOW
   const buyNow = () => {
+    if (product.stock <= 0) {
+      alert(
+        "Product is out of stock"
+      );
+      return;
+    }
+
     localStorage.setItem(
       "buyNowProduct",
       JSON.stringify(
@@ -96,8 +157,39 @@ export default function ProductDetails({
           flexWrap: "wrap",
           boxShadow:
             "0 8px 20px rgba(0,0,0,0.08)",
+          position: "relative",
         }}
       >
+        <button
+          onClick={toggleWishlist}
+          title={
+            isWishlisted
+              ? "Remove from wishlist"
+              : "Add to wishlist"
+          }
+          style={{
+            position: "absolute",
+            top: "24px",
+            right: "24px",
+            width: "48px",
+            height: "48px",
+            borderRadius: "50%",
+            border:
+              "1px solid #e5e7eb",
+            background: "white",
+            color: isWishlisted
+              ? "#ef4444"
+              : "#64748b",
+            fontSize: "28px",
+            cursor: "pointer",
+            boxShadow:
+              "0 2px 8px rgba(0,0,0,0.12)",
+            zIndex: 2,
+          }}
+        >
+          ♥
+        </button>
+
         {/* IMAGE */}
         <div
           style={{
@@ -166,8 +258,24 @@ export default function ProductDetails({
                 "20px",
             }}
           >
-            ₹{product.price}
+            Rs {product.price}
           </h2>
+
+          <p
+            style={{
+              color:
+                product.stock > 0
+                  ? "#16a34a"
+                  : "#ef4444",
+              fontWeight:
+                "bold",
+              fontSize: "18px",
+            }}
+          >
+            {product.stock > 0
+              ? `${product.stock} left`
+              : "Out of stock"}
+          </p>
 
           {/* BUTTONS */}
           <div
@@ -186,7 +294,9 @@ export default function ProductDetails({
               }
               style={{
                 background:
-                  "#2563eb",
+                  product.stock > 0
+                    ? "#2563eb"
+                    : "#94a3b8",
                 color:
                   "white",
                 border: "none",
@@ -201,8 +311,13 @@ export default function ProductDetails({
                 fontSize:
                   "18px",
               }}
+              disabled={
+                product.stock <= 0
+              }
             >
-              Add to Cart
+              {product.stock > 0
+                ? "Add to Cart"
+                : "Out of Stock"}
             </button>
 
             <button
@@ -211,7 +326,9 @@ export default function ProductDetails({
               }
               style={{
                 background:
-                  "#111827",
+                  product.stock > 0
+                    ? "#111827"
+                    : "#94a3b8",
                 color:
                   "white",
                 border: "none",
@@ -226,6 +343,9 @@ export default function ProductDetails({
                 fontSize:
                   "18px",
               }}
+              disabled={
+                product.stock <= 0
+              }
             >
               Buy Now
             </button>

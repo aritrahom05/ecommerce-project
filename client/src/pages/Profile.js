@@ -1,10 +1,101 @@
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Profile({
   user,
   cart,
   orders,
 }) {
+
+  const saveAddress = async () => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(
+      "http://localhost:5000/api/addresses",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(address),
+      }
+    );
+
+    const data = await res.json();
+
+    setAddresses([...addresses, data]);
+
+    setShowAddressForm(false);
+
+    setAddress({
+      fullName: "",
+      phone: "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      state: "",
+      pincode: "",
+    });
+  };
+
+  const navigate = useNavigate();
+
+  const [addresses, setAddresses] = useState([]);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+
+  const [address, setAddress] = useState({
+    fullName: "",
+    phone: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
+
+  const deleteAddress = async (id) => {
+    const token =
+      localStorage.getItem("token");
+
+    await fetch(
+      `http://localhost:5000/api/addresses/${id}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setAddresses(
+      addresses.filter(
+        (addr) => addr._id !== id
+      )
+    );
+  };
+
+  const loadAddresses = async () => {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(
+      "http://localhost:5000/api/addresses",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const data = await res.json();
+
+    setAddresses(
+      Array.isArray(data) ? data : []
+    );
+  };
+
+  useEffect(() => {
+    loadAddresses();
+  }, []);
+
   if (!user) {
     return (
       <div style={{ padding: "40px" }}>
@@ -122,31 +213,31 @@ export default function Profile({
             display: "flex",
             gap: "20px",
             flexWrap: "wrap",
+            marginTop: "30px",
           }}
         >
-          <Link
-            to="/orders"
-            style={buttonStyle}
-          >
-            View Orders
+          <Link to="/address" style={buttonStyle}>
+            Add Address
           </Link>
 
-          <Link
-            to="/cart"
-            style={buttonStyle}
-          >
-            Go to Cart
+          <Link to="/saved-addresses" style={buttonStyle}>
+            Saved Addresses
           </Link>
 
-          <Link
-            to="/"
-            style={buttonStyle}
-          >
-            Continue Shopping
-          </Link>
+            <Link to="/orders" style={buttonStyle}>
+              View Orders
+            </Link>
+
+            <Link to="/cart" style={buttonStyle}>
+              Go to Cart
+            </Link>
+
+            <Link to="/" style={buttonStyle}>
+              Continue Shopping
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
   );
 }
 

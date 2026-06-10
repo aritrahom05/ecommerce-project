@@ -1,3 +1,4 @@
+import catrIcon from "./Cart_logo.png";
 import {
   Link,
   useNavigate,
@@ -8,6 +9,8 @@ export default function Navbar({
   setUser,
   cart,
   setCart,
+  wishlist,
+  setWishlist,
 }) {
   const navigate = useNavigate();
 
@@ -47,11 +50,56 @@ export default function Navbar({
         }}
       >
         {/* CART */}
-{user && (
-  <Link style={linkStyle} to="/cart">
-    Cart {cart.length > 0 && `(${cart.length})`}
-  </Link>
-)}
+        {user && (
+          <>
+            <Link style={linkStyle} to="/wishlist">
+              Wishlist{" "}
+              {wishlist.length > 0 &&
+                `(${wishlist.length})`}
+            </Link>
+
+            <Link style={linkStyle} to="/cart">
+              <div
+                style={{
+                  position: "relative",
+                  display: "inline-block",
+                }}
+              >
+                <img
+                  src={catrIcon}
+                  alt="Cart"
+                  style={{
+                    width: "30px",
+                    height: "30px",
+                  }}
+                />
+
+                {cart.length > 0 && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "-6px",
+                      right: "-8px",
+                      background: "red",
+                      color: "white",
+                      borderRadius: "50%",
+                      minWidth: "18px",
+                      height: "18px",
+                      fontSize: "11px",
+                      fontWeight: "bold",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "2px",
+                    }}
+                  >
+                    {cart.length}
+                  </span>
+                )}
+              </div>
+            </Link>
+          </>
+        )}
 
         {!user ? (
           <>
@@ -64,6 +112,16 @@ export default function Navbar({
           </>
         ) : (
           <>
+            {/* ADMIN */}
+            {user.isAdmin && (
+              <Link
+                to="/admin"
+                style={linkStyle}
+              >
+                Admin
+              </Link>
+            )}
+
             {/* PROFILE */}
             <Link
               to="/profile"
@@ -84,8 +142,10 @@ export default function Navbar({
               onClick={() => {
                 setUser(null);
                 setCart([]);
+                setWishlist([]);
 
                 localStorage.removeItem("user");
+                localStorage.removeItem("token");
 
                 navigate("/");
               }}

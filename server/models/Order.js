@@ -18,6 +18,13 @@ const orderSchema =
 
           description:
             String,
+
+          productId: String,
+
+          quantity: {
+            type: Number,
+            default: 1,
+          },
         },
       ],
 
@@ -27,6 +34,35 @@ const orderSchema =
 
       paymentId: {
         type: String,
+      },
+
+      shippingAddress: {
+        fullName: String,
+        phone: Number,
+        alternatePhone: String,
+        houseNo: String,
+        roadName: String,
+        landmark: String,
+        city: String,
+        state: String,
+        pincode: Number,
+        addressType: {
+          type: String,
+          default: "Home",
+        },
+      },
+
+      status: {
+        type: String,
+        enum: [
+          "Pending",
+          "Packed",
+          "Shipped",
+          "Delivered",
+          "Cancelled",
+          "Exchange Requested",
+        ],
+        default: "Pending",
       },
     },
     {
