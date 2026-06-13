@@ -5,6 +5,11 @@ import {
   Navigate,
 } from "react-router-dom";
 
+import {
+  FaEye,
+  FaEyeSlash,
+} from "react-icons/fa";
+
 export default function Register({
   user,
 }) {
@@ -22,6 +27,14 @@ export default function Register({
     setConfirmPassword,
   ] = useState("");
 
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [
+    showConfirmPassword,
+    setShowConfirmPassword,
+  ] = useState(false);
+
   const [message, setMessage] =
     useState("");
 
@@ -29,6 +42,36 @@ export default function Register({
   if (user) {
     return <Navigate to="/profile" />;
   }
+
+  const hasLength =
+    password.length >= 8;
+
+  const hasUppercase =
+    /[A-Z]/.test(password);
+
+  const hasLowercase =
+    /[a-z]/.test(password);
+
+  const hasNumber =
+    /\d/.test(password);
+
+  const hasSpecial =
+  /[@$!%*?&_]/.test(password);
+
+  const strengthScore = [
+    hasLength,
+    hasUppercase,
+    hasLowercase,
+    hasNumber,
+    hasSpecial,
+  ].filter(Boolean).length;
+
+  const strengthLabel =
+    strengthScore <= 2
+      ? "🔴 Weak"
+      : strengthScore <= 4
+      ? "🟡 Medium"
+      : "🟢 Strong";
 
   // REGISTER
   const handleRegister = async () => {
@@ -55,16 +98,19 @@ export default function Register({
     }
 
     const passwordRegex =
-      /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+  /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_]).{8,}$/;
 
     if (!passwordRegex.test(password)) {
       setMessage(
-        " Password must contain at least 8 characters, 1 uppercase letter, 1 number and 1 special character"
+        "Password must contain at least 8 characters, 1 uppercase letter, 1 number and 1 special character"
       );
       return;
     }
 
-    if (password !== confirmPassword) {
+    if (
+      password !==
+      confirmPassword
+    ) {
       setMessage(
         "Passwords do not match"
       );
@@ -88,9 +134,13 @@ export default function Register({
         }
       );
 
-      const data = await res.json();
+      const data =
+        await res.json();
 
-      if (data._id || data.message) {
+      if (
+        data._id ||
+        data.message
+      ) {
         setMessage(
           "Account created successfully!"
         );
@@ -112,8 +162,10 @@ export default function Register({
       style={{
         minHeight: "100vh",
         display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
+        justifyContent:
+          "center",
+        alignItems:
+          "center",
         background:
           "linear-gradient(to right, #0f172a, #1e3a8a)",
         padding: "20px",
@@ -124,17 +176,18 @@ export default function Register({
           width: "420px",
           background:
             "rgba(255,255,255,0.12)",
-          backdropFilter: "blur(12px)",
+          backdropFilter:
+            "blur(12px)",
           border:
             "1px solid rgba(255,255,255,0.2)",
-          borderRadius: "24px",
+          borderRadius:
+            "24px",
           padding: "40px",
           color: "white",
           boxShadow:
             "0 8px 32px rgba(0,0,0,0.3)",
         }}
       >
-        {/* TITLE */}
         <h1
           style={{
             marginBottom: "10px",
@@ -153,7 +206,6 @@ export default function Register({
           Join Ecart and start shopping
         </p>
 
-        {/* MESSAGE */}
         {message && (
           <p
             style={{
@@ -168,7 +220,6 @@ export default function Register({
           </p>
         )}
 
-        {/* NAME */}
         <input
           type="text"
           placeholder="Full Name"
@@ -179,7 +230,6 @@ export default function Register({
           style={inputStyle}
         />
 
-        {/* EMAIL */}
         <input
           type="email"
           placeholder="Email"
@@ -190,39 +240,170 @@ export default function Register({
           style={inputStyle}
         />
 
-        {/* PASSWORD */}
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) =>
-            setPassword(e.target.value)
-          }
-          style={inputStyle}
-        />
+        <div
+  style={{
+    position: "relative",
+    marginBottom: "16px",
+  }}
+>
+  <input
+    type={
+      showPassword
+        ? "text"
+        : "password"
+    }
+    placeholder="Password"
+    value={password}
+    onChange={(e) =>
+      setPassword(
+        e.target.value
+      )
+    }
+    style={{
+      ...inputStyle,
+      marginBottom: 0,
+    }}
+  />
 
-        {/* CONFIRM PASSWORD */}
-        <input
-          type="password"
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChange={(e) =>
-            setConfirmPassword(
-              e.target.value
-            )
-          }
-          style={inputStyle}
-        />
+  <span
+    onClick={() =>
+      setShowPassword(
+        !showPassword
+      )
+    }
+    style={{
+      position:
+        "absolute",
+      right: "15px",
+      top: "50%",
+      transform:
+        "translateY(-50%)",
+      cursor:
+        "pointer",
+      color:
+        "#cbd5e1",
+      fontSize: "18px",
+    }}
+  >
+    {showPassword ? (
+      <FaEyeSlash />
+    ) : (
+      <FaEye />
+    )}
+  </span>
+</div>
 
-        {/* REGISTER BUTTON */}
+        <div
+          style={{
+            marginBottom: "18px",
+            color: "#cbd5e1",
+            fontSize: "14px",
+          }}
+        >
+          <strong>
+            Password Strength:
+          </strong>{" "}
+          {strengthLabel}
+
+          <div>
+            {hasLength
+              ? "✅"
+              : "❌"}{" "}
+            At least 8 characters
+          </div>
+
+          <div>
+            {hasUppercase
+              ? "✅"
+              : "❌"}{" "}
+            One uppercase letter
+          </div>
+
+          <div>
+            {hasLowercase
+              ? "✅"
+              : "❌"}{" "}
+            One lowercase letter
+          </div>
+
+          <div>
+            {hasNumber
+              ? "✅"
+              : "❌"}{" "}
+            One number
+          </div>
+
+          <div>
+            {hasSpecial
+              ? "✅"
+              : "❌"}{" "}
+            One special character
+          </div>
+        </div>
+
+        <div
+  style={{
+    position: "relative",
+    marginBottom: "16px",
+  }}
+>
+  <input
+    type={
+      showConfirmPassword
+        ? "text"
+        : "password"
+    }
+    placeholder="Confirm Password"
+    value={
+      confirmPassword
+    }
+    onChange={(e) =>
+      setConfirmPassword(
+        e.target.value
+      )
+    }
+    style={{
+      ...inputStyle,
+      marginBottom: 0,
+    }}
+  />
+
+  <span
+    onClick={() =>
+      setShowConfirmPassword(
+        !showConfirmPassword
+      )
+    }
+    style={{
+      position: "absolute",
+      right: "15px",
+      top: "50%",
+      transform:
+        "translateY(-50%)",
+      cursor: "pointer",
+      color: "#cbd5e1",
+      fontSize: "18px",
+    }}
+  >
+    {showConfirmPassword ? (
+      <FaEyeSlash />
+    ) : (
+      <FaEye />
+    )}
+  </span>
+</div>
+
         <button
-          onClick={handleRegister}
-          style={registerButton}
+          onClick={
+            handleRegister
+          }
+          style={
+            registerButton
+          }
         >
           Create Account
         </button>
 
-        {/* LOGIN */}
         <p
           style={{
             marginTop: "25px",
@@ -249,6 +430,7 @@ export default function Register({
 const inputStyle = {
   width: "100%",
   padding: "14px",
+  boxSizing: "border-box",
   marginBottom: "16px",
   borderRadius: "12px",
   border: "none",
@@ -258,6 +440,7 @@ const inputStyle = {
     "rgba(255,255,255,0.15)",
   color: "white",
 };
+
 
 const registerButton = {
   width: "100%",

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Navigate,
   useNavigate,
@@ -10,23 +11,37 @@ export default function Wishlist({
   cart,
   setCart,
 }) {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
+
+  const [
+    hoveredCard,
+    setHoveredCard,
+  ] = useState(null);
+
+  const [
+    activeFilter,
+    setActiveFilter,
+  ] = useState("all");
 
   if (!user) {
     return <Navigate to="/login" />;
   }
 
-  const removeFromWishlist = (
-    productId
-  ) => {
-    setWishlist(
-      wishlist.filter(
-        (item) => item._id !== productId
-      )
-    );
-  };
+  const removeFromWishlist =
+    (productId) => {
+      setWishlist(
+        wishlist.filter(
+          (item) =>
+            item._id !==
+            productId
+        )
+      );
+    };
 
-  const addToCart = (product) => {
+  const addToCart = (
+    product
+  ) => {
     if (product.stock <= 0) {
       alert(
         "Product is out of stock"
@@ -37,11 +52,13 @@ export default function Wishlist({
     const alreadyInCart =
       cart.filter(
         (item) =>
-          item._id === product._id
+          item._id ===
+          product._id
       ).length;
 
     if (
-      alreadyInCart >= product.stock
+      alreadyInCart >=
+      product.stock
     ) {
       alert(
         `Only ${product.stock} stock available`
@@ -49,10 +66,15 @@ export default function Wishlist({
       return;
     }
 
-    setCart([...cart, product]);
+    setCart([
+      ...cart,
+      product,
+    ]);
   };
 
-  const buyNow = (product) => {
+  const buyNow = (
+    product
+  ) => {
     if (product.stock <= 0) {
       alert(
         "Product is out of stock"
@@ -62,203 +84,572 @@ export default function Wishlist({
 
     localStorage.setItem(
       "buyNowProduct",
-      JSON.stringify(product)
+      JSON.stringify(
+        product
+      )
     );
 
-    navigate("/cart?buyNow=true");
+    navigate(
+      "/cart?buyNow=true"
+    );
   };
 
+  const inStock =
+    wishlist.filter(
+      (item) =>
+        item.stock > 0
+    ).length;
+
+  const outStock =
+    wishlist.filter(
+      (item) =>
+        item.stock <= 0
+    ).length;
+
+  const filteredWishlist =
+    activeFilter === "all"
+      ? wishlist
+      : activeFilter ===
+        "instock"
+      ? wishlist.filter(
+          (item) =>
+            item.stock > 0
+        )
+      : wishlist.filter(
+          (item) =>
+            item.stock <= 0
+        );
+
   return (
-    <div style={pageStyle}>
-      <h1 style={titleStyle}>
-        My Wishlist
-      </h1>
+    <>
+      <div className="wishlist-page">
 
-      {wishlist.length === 0 && (
-        <div style={emptyStyle}>
-          <h2>Your wishlist is empty</h2>
-          <p style={mutedStyle}>
-            Save products you like and buy them later.
-          </p>
-          <button
-            onClick={() =>
-              navigate("/")
-            }
-            style={primaryButton}
-          >
-            Browse Products
-          </button>
-        </div>
-      )}
+        <h1 className="title">
+          Wishlist ❤️
+        </h1>
 
-      <div style={gridStyle}>
-        {wishlist.map((product) => (
-          <div
-            key={product._id}
-            style={cardStyle}
-          >
-            <button
+        {wishlist.length >
+          0 && (
+          <div className="stats-grid">
+
+            <div
               onClick={() =>
-                removeFromWishlist(
-                  product._id
+                setActiveFilter(
+                  "all"
                 )
               }
-              title="Remove from wishlist"
-              style={heartButton}
+              className={
+                activeFilter ===
+                "all"
+                  ? "stat-card active"
+                  : "stat-card"
+              }
             >
-              ♥
+              <h3>
+                {
+                  wishlist.length
+                }
+              </h3>
+              <p>Saved</p>
+            </div>
+
+            <div
+              onClick={() =>
+                setActiveFilter(
+                  "instock"
+                )
+              }
+              className={
+                activeFilter ===
+                "instock"
+                  ? "stat-card active"
+                  : "stat-card"
+              }
+            >
+              <h3>
+                {inStock}
+              </h3>
+              <p>In Stock</p>
+            </div>
+
+            <div
+              onClick={() =>
+                setActiveFilter(
+                  "outstock"
+                )
+              }
+              className={
+                activeFilter ===
+                "outstock"
+                  ? "stat-card active"
+                  : "stat-card"
+              }
+            >
+              <h3>
+                {outStock}
+              </h3>
+              <p>Out</p>
+            </div>
+
+          </div>
+        )}
+
+        {wishlist.length ===
+          0 && (
+          <div className="empty-card">
+
+            <h2>
+              Wishlist Empty
+            </h2>
+
+            <p>
+              Save products
+              for later.
+            </p>
+
+            <button
+              onClick={() =>
+                navigate("/")
+              }
+              className="browse-btn"
+            >
+              Browse
             </button>
 
-            <img
-              src={
-                product.image ||
-                "https://via.placeholder.com/250x180.png?text=Product"
-              }
-              alt={product.name}
-              style={imageStyle}
-            />
-
-            <h2 style={nameStyle}>
-              {product.name}
-            </h2>
-            <p style={mutedStyle}>
-              {product.description}
-            </p>
-            <h2 style={priceStyle}>
-              Rs {product.price}
-            </h2>
-            <p
-              style={{
-                color:
-                  product.stock > 0
-                    ? "#16a34a"
-                    : "#ef4444",
-                fontWeight: "bold",
-              }}
-            >
-              {product.stock > 0
-                ? `${product.stock} left`
-                : "Out of stock"}
-            </p>
-
-            <div style={actionRowStyle}>
-              <button
-                onClick={() =>
-                  addToCart(product)
-                }
-                style={primaryButton}
-                disabled={
-                  product.stock <= 0
-                }
-              >
-                Add
-              </button>
-
-              <button
-                onClick={() =>
-                  buyNow(product)
-                }
-                style={buyButton}
-                disabled={
-                  product.stock <= 0
-                }
-              >
-                Buy Now
-              </button>
-            </div>
           </div>
-        ))}
+        )}
+
+        <div className="products-grid">
+
+          {filteredWishlist.map(
+            (
+              product,
+              index
+            ) => (
+              <div
+                key={
+                  product._id
+                }
+                className="product-card"
+                onClick={() =>
+                  navigate(
+                    `/product/${product._id}`
+                  )
+                }
+                onMouseEnter={() =>
+                  setHoveredCard(
+                    index
+                  )
+                }
+                onMouseLeave={() =>
+                  setHoveredCard(
+                    null
+                  )
+                }
+                style={{
+                  transform:
+                    hoveredCard ===
+                    index
+                      ? "translateY(-6px)"
+                      : "translateY(0)",
+                }}
+              >
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFromWishlist(
+                      product._id
+                    );
+                  }}
+                  className="heart-btn"
+                >
+                  ❤️
+                </button>
+
+                <img
+                  src={
+                    product.image ||
+                    "https://via.placeholder.com/200"
+                  }
+                  alt={
+                    product.name
+                  }
+                  className="product-img"
+                />
+
+                <h3>
+                  {
+                    product.name
+                  }
+                </h3>
+
+                <p className="desc">
+                  {
+                    product.description
+                  }
+                </p>
+
+                <div className="price-box">
+
+                  <span className="price">
+                    Rs{" "}
+                    {
+                      product.price
+                    }
+                  </span>
+
+                  <span
+                    className={
+                      product.stock >
+                      0
+                        ? "stock green"
+                        : "stock red"
+                    }
+                  >
+                    {product.stock >
+                    0
+                      ? `In Stock (${product.stock})`
+                      : "Out of Stock"}
+                  </span>
+
+                </div>
+
+                <div className="action-row">
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCart(
+                        product
+                      );
+                    }}
+                    disabled={
+                      product.stock <=
+                      0
+                    }
+                    className="cart-btn"
+                  >
+                    Cart
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      buyNow(
+                        product
+                      );
+                    }}
+                    disabled={
+                      product.stock <=
+                      0
+                    }
+                    className="buy-btn"
+                  >
+                    Buy
+                  </button>
+
+                </div>
+
+              </div>
+            )
+          )}
+
+        </div>
       </div>
-    </div>
-  );
+
+<style>{`*{
+box-sizing:border-box;
 }
 
-const pageStyle = {
-  padding: "30px",
-  background: "#f3f4f6",
-  minHeight: "100vh",
-};
+.wishlist-page{
+min-height:100vh;
+padding:32px;
+background:
+linear-gradient(
+to right,
+#0f172a,
+#1e3a8a
+);
+}
 
-const titleStyle = {
-  marginBottom: "24px",
-  color: "#111827",
-};
+/* TITLE */
 
-const emptyStyle = {
-  background: "white",
-  borderRadius: "12px",
-  padding: "32px",
-  textAlign: "center",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-};
+.title{
+color:white;
+font-size:54px;
+margin-bottom:22px;
+font-weight:800;
+}
 
-const gridStyle = {
-  display: "grid",
-  gridTemplateColumns:
-    "repeat(auto-fit, minmax(250px, 1fr))",
-  gap: "25px",
-};
+/* SMALLER STAT CARDS */
 
-const cardStyle = {
-  background: "white",
-  borderRadius: "12px",
-  padding: "20px",
-  position: "relative",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-};
+.stats-grid{
+display:grid;
+grid-template-columns:
+repeat(auto-fit,minmax(150px,1fr));
+gap:14px;
+margin-bottom:26px;
+max-width:900px;
+}
 
-const heartButton = {
-  position: "absolute",
-  top: "16px",
-  right: "16px",
-  width: "42px",
-  height: "42px",
-  borderRadius: "50%",
-  border: "1px solid #e5e7eb",
-  background: "white",
-  color: "#ef4444",
-  fontSize: "24px",
-  cursor: "pointer",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
-};
+.stat-card{
+background:
+rgba(255,255,255,.12);
+backdrop-filter:
+blur(14px);
+border:
+1px solid rgba(255,255,255,.15);
+border-radius:16px;
+padding:10px 14px;
+min-height:82px;
+text-align:center;
+color:white;
+cursor:pointer;
+transition:.25s ease;
+}
 
-const imageStyle = {
-  width: "100%",
-  height: "220px",
-  objectFit: "cover",
-  borderRadius: "8px",
-};
+.stat-card:hover{
+transform:
+translateY(-3px);
+box-shadow:
+0 10px 22px rgba(
+37,99,235,.22
+);
+}
 
-const nameStyle = {
-  color: "#111827",
-};
+.stat-card.active{
+border:
+1px solid #3b82f6;
+box-shadow:
+0 0 18px rgba(
+59,130,246,.18
+);
+}
 
-const mutedStyle = {
-  color: "#64748b",
-};
+.stat-card h3{
+font-size:26px;
+margin:0;
+}
 
-const priceStyle = {
-  color: "#2563eb",
-};
+.stat-card p{
+margin:4px 0 0 0;
+color:#cbd5e1;
+font-size:13px;
+}
 
-const actionRowStyle = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "10px",
-  marginTop: "12px",
-};
+/* EMPTY */
 
-const primaryButton = {
-  background: "#2563eb",
-  color: "white",
-  border: "none",
-  borderRadius: "8px",
-  padding: "12px",
-  fontWeight: "bold",
-  cursor: "pointer",
-};
+.empty-card{
+background:
+rgba(255,255,255,.12);
+backdrop-filter:
+blur(14px);
+padding:40px;
+border-radius:20px;
+color:white;
+text-align:center;
+margin-bottom:30px;
+}
 
-const buyButton = {
-  ...primaryButton,
-  background: "#f97316",
-};
+.browse-btn{
+background:#2563eb;
+border:none;
+padding:12px 22px;
+border-radius:12px;
+color:white;
+cursor:pointer;
+font-weight:700;
+margin-top:12px;
+}
+
+/* BIGGER PRODUCT GRID */
+
+.products-grid{
+display:grid;
+grid-template-columns:
+repeat(auto-fill,minmax(300px,300px));
+justify-content:start;
+gap:22px;
+align-items:start;
+}
+
+/* PRODUCT CARD */
+
+.product-card{
+background:
+rgba(255,255,255,.12);
+backdrop-filter:
+blur(14px);
+border:
+1px solid rgba(255,255,255,.15);
+border-radius:20px;
+padding:16px;
+transition:.25s ease;
+position:relative;
+color:white;
+cursor:pointer;
+
+display:flex;
+flex-direction:column;
+align-items:stretch;
+
+width:300px;
+height:auto;
+min-height:390px;
+}
+
+.product-card:hover{
+box-shadow:
+0 12px 30px rgba(
+37,99,235,.22
+);
+}
+
+/* HEART */
+
+.heart-btn{
+position:absolute;
+top:12px;
+right:12px;
+width:38px;
+height:38px;
+border:none;
+border-radius:50%;
+background:
+rgba(255,255,255,.15);
+cursor:pointer;
+font-size:18px;
+}
+
+/* IMAGE */
+
+.product-img{
+width:100%;
+height:150px;
+object-fit:contain;
+display:block;
+margin:0 auto 14px auto;
+background:white;
+border-radius:12px;
+padding:8px;
+}
+
+/* TEXT */
+
+.product-card h3{
+margin:8px 0;
+font-size:26px;
+font-weight:700;
+}
+
+.desc{
+min-height:40px;
+font-size:14px;
+line-height:1.4;
+color:#cbd5e1;
+}
+
+/* PRICE */
+
+.price-box{
+display:flex;
+justify-content:
+space-between;
+align-items:center;
+margin:18px 0;
+gap:8px;
+}
+
+.price{
+font-size:24px;
+font-weight:700;
+color:#60a5fa;
+}
+
+/* STOCK */
+
+.stock{
+padding:6px 10px;
+border-radius:10px;
+font-size:12px;
+font-weight:600;
+white-space:nowrap;
+}
+
+.green{
+background:#16a34a;
+}
+
+.red{
+background:#dc2626;
+}
+
+/* BUTTONS */
+
+.action-row{
+display:grid;
+grid-template-columns:
+1fr 1fr;
+gap:10px;
+margin-top:auto;
+}
+
+.cart-btn,
+.buy-btn{
+padding:11px;
+font-size:14px;
+border:none;
+border-radius:12px;
+cursor:pointer;
+font-weight:700;
+color:white;
+transition:.25s;
+}
+
+.cart-btn{
+background:#2563eb;
+}
+
+.buy-btn{
+background:#f97316;
+}
+
+.cart-btn:hover,
+.buy-btn:hover{
+transform:
+translateY(-2px);
+}
+
+.cart-btn:disabled,
+.buy-btn:disabled{
+opacity:.45;
+cursor:not-allowed;
+}
+
+/* MOBILE */
+
+@media(max-width:768px){
+
+.title{
+font-size:38px;
+}
+
+.products-grid{
+grid-template-columns:
+1fr;
+justify-content:center;
+}
+
+.product-card{
+width:100%;
+min-height:auto;
+}
+
+}
+
+`}</style>
+
+    </>
+  );
+}

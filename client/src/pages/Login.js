@@ -1,18 +1,8 @@
 import { useState } from "react";
-
-import {
-  Link,
-  Navigate,
-} from "react-router-dom";
-
-import {
-  signInWithPopup,
-} from "firebase/auth";
-
-import {
-  auth,
-  provider,
-} from "../firebase";
+import { Link, Navigate } from "react-router-dom";
+import { signInWithPopup } from "firebase/auth";
+import { auth, provider } from "../firebase";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function Login({
   user,
@@ -26,15 +16,16 @@ export default function Login({
   const [password, setPassword] =
     useState("");
 
+  const [showPassword, setShowPassword] =
+    useState(false);
+
   const [message, setMessage] =
     useState("");
 
-  // ALREADY LOGGED IN
   if (user) {
     return <Navigate to="/" />;
   }
 
-  // NORMAL LOGIN
   const handleLogin = async () => {
     if (!email || !password) {
       setMessage(
@@ -74,7 +65,6 @@ export default function Login({
           data.token
         );
 
-        // LOAD CART
         const savedCart =
           localStorage.getItem(
             `cart_${data.user._id}`
@@ -108,7 +98,6 @@ export default function Login({
     }
   };
 
-  // GOOGLE LOGIN
   const handleGoogleLogin =
     async () => {
       try {
@@ -123,8 +112,10 @@ export default function Login({
 
         const userData = {
           _id: googleUser.uid,
-          name: googleUser.displayName,
-          email: googleUser.email,
+          name:
+            googleUser.displayName,
+          email:
+            googleUser.email,
         };
 
         setUser(userData);
@@ -167,204 +158,374 @@ export default function Login({
     };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background:
-          "linear-gradient(to right, #0f172a, #1e3a8a)",
-        padding: "20px",
-      }}
-    >
-      <div
-        style={{
-          width: "420px",
-          background:
-            "rgba(255,255,255,0.12)",
-          backdropFilter: "blur(12px)",
-          border:
-            "1px solid rgba(255,255,255,0.2)",
-          borderRadius: "24px",
-          padding: "40px",
-          color: "white",
-          boxShadow:
-            "0 8px 32px rgba(0,0,0,0.3)",
-        }}
-      >
-        {/* TITLE */}
-        <h1
-          style={{
-            marginBottom: "10px",
-            fontSize: "36px",
-          }}
-        >
-          Welcome Back 👋
-        </h1>
+    <>
+      <div className="login-page">
 
-        <p
-          style={{
-            color: "#cbd5e1",
-            marginBottom: "30px",
-          }}
-        >
-          Login to continue shopping
-        </p>
+        <div className="login-card">
 
-        {/* MESSAGE */}
-        {message && (
-          <p
-            style={{
-              background:
-                "rgba(239,68,68,0.2)",
-              padding: "10px",
-              borderRadius: "10px",
-              marginBottom: "20px",
-            }}
-          >
-            {message}
+          <h1>
+            Welcome Back 👋
+          </h1>
+
+          <p className="sub-text">
+            Login to continue your
+            premium shopping experience.
           </p>
-        )}
 
-        {/* EMAIL */}
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) =>
-            setEmail(e.target.value)
-          }
-          style={inputStyle}
-        />
+          {message && (
+            <div className="error-box">
+              {message}
+            </div>
+          )}
 
-        {/* PASSWORD */}
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) =>
-            setPassword(e.target.value)
-          }
-          style={inputStyle}
-        />
-
-        {/* LOGIN BUTTON */}
-        <button
-          onClick={handleLogin}
-          style={loginButton}
-        >
-          Login
-        </button>
-
-        <p
-          style={{
-            textAlign: "right",
-            marginTop: "10px",
-          }}
-        >
-          <Link
-            to="/forgot-password"
-            style={{
-              color: "white",
-            }}
-          >
-            Forgot Password?
-          </Link>
-        </p>
-
-        {/* OR */}
-        <div
-          style={{
-            textAlign: "center",
-            margin: "22px 0",
-            color: "#cbd5e1",
-            fontWeight: "bold",
-          }}
-        >
-          OR
-        </div>
-
-        {/* GOOGLE BUTTON */}
-        <button
-          onClick={handleGoogleLogin}
-          style={googleButton}
-        >
-          <img
-            src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg"
-            alt="Google"
-            style={{
-              width: "22px",
-              height: "22px",
-            }}
+          <input
+            type="email"
+            placeholder="Email Address"
+            value={email}
+            onChange={(e) =>
+              setEmail(
+                e.target.value
+              )
+            }
+            className="premium-input"
           />
 
-          Continue with Google
-        </button>
+          <div className="password-wrap">
 
-        {/* REGISTER */}
-        <p
-          style={{
-            marginTop: "25px",
-            textAlign: "center",
-            color: "#cbd5e1",
-          }}
-        >
-          Don’t have an account?{" "}
-          <Link
-            to="/register"
-            style={{
-              color: "white",
-              fontWeight: "bold",
-            }}
+            <input
+              type={
+                showPassword
+                  ? "text"
+                  : "password"
+              }
+              placeholder="Password"
+              value={password}
+              onChange={(e) =>
+                setPassword(
+                  e.target.value
+                )
+              }
+              className="premium-input password-input"
+            />
+
+            <span
+              onClick={() =>
+                setShowPassword(
+                  !showPassword
+                )
+              }
+              className="eye-icon"
+            >
+              {showPassword ? (
+                <FaEyeSlash />
+              ) : (
+                <FaEye />
+              )}
+            </span>
+
+          </div>
+
+          <button
+            onClick={handleLogin}
+            className="login-btn"
           >
-            Create account
-          </Link>
-        </p>
+            Login
+          </button>
+
+          <p className="forgot-wrap">
+            <Link
+              to="/forgot-password"
+              className="auth-link"
+            >
+              Forgot Password?
+            </Link>
+          </p>
+
+          <div className="divider">
+            OR
+          </div>
+
+          <button
+            onClick={
+              handleGoogleLogin
+            }
+            className="google-btn"
+          >
+            <img
+              src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg"
+              alt="Google"
+            />
+
+            Continue with Google
+          </button>
+
+          <p className="register-wrap">
+            Don’t have an account?{" "}
+            <Link
+              to="/register"
+              className="auth-link"
+            >
+              Create account
+            </Link>
+          </p>
+
+        </div>
       </div>
-    </div>
+
+      <style>{`
+
+      *{
+        box-sizing:border-box;
+      }
+
+      .login-page{
+        min-height:100vh;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        padding:20px;
+
+        background:
+linear-gradient(
+to right,
+#0f172a,
+#1e3a8a
+);
+      }
+
+      .login-card{
+        width:430px;
+        padding:42px;
+
+        background:
+        rgba(255,255,255,0.06);
+
+        backdrop-filter:blur(18px);
+
+        border-radius:28px;
+
+        border:
+        1px solid rgba(
+          255,255,255,0.08
+        );
+
+        box-shadow:
+        0 15px 40px rgba(
+          0,0,0,.35
+        );
+
+        color:white;
+
+        transition:.35s ease;
+      }
+
+      .login-card:hover{
+        transform:
+        translateY(-4px);
+      }
+
+      .login-card h1{
+        margin:0 0 10px 0;
+        font-size:38px;
+      }
+
+      .sub-text{
+        color:#94a3b8;
+        margin-bottom:28px;
+        line-height:1.6;
+      }
+
+      .error-box{
+        background:
+        rgba(239,68,68,.15);
+        color:#fca5a5;
+        padding:12px;
+        border-radius:12px;
+        margin-bottom:18px;
+        font-size:14px;
+      }
+
+      .premium-input{
+        width:100%;
+        padding:16px;
+        margin-bottom:16px;
+
+        border:none;
+        outline:none;
+
+        border-radius:14px;
+
+        background:
+        rgba(255,255,255,0.08);
+
+        color:white;
+        font-size:15px;
+
+        border:
+        1px solid rgba(
+          255,255,255,0.06
+        );
+
+        transition:.3s ease;
+      }
+
+      .premium-input:focus{
+        border:
+        1px solid #3b82f6;
+
+        box-shadow:
+        0 0 20px rgba(
+          59,130,246,.25
+        );
+      }
+
+      .premium-input::placeholder{
+        color:#94a3b8;
+      }
+
+      .password-wrap{
+        position:relative;
+      }
+
+      .password-input{
+        margin-bottom:0;
+      }
+
+      .eye-icon{
+        position:absolute;
+        right:18px;
+        top:50%;
+        transform:
+        translateY(-50%);
+
+        cursor:pointer;
+        color:#94a3b8;
+        font-size:18px;
+
+        transition:.3s;
+      }
+
+      .eye-icon:hover{
+        color:white;
+        transform:
+        translateY(-50%)
+        scale(1.1);
+      }
+
+      .login-btn{
+        width:100%;
+        margin-top:18px;
+        padding:15px;
+
+        border:none;
+        cursor:pointer;
+
+        border-radius:14px;
+
+        font-weight:700;
+        font-size:16px;
+        color:white;
+
+        background:
+        linear-gradient(
+          135deg,
+          #2563eb,
+          #1d4ed8
+        );
+
+        transition:.3s ease;
+      }
+
+      .login-btn:hover{
+        transform:
+        translateY(-2px);
+
+        box-shadow:
+        0 10px 25px rgba(
+          37,99,235,.3
+        );
+      }
+
+      .forgot-wrap{
+        text-align:right;
+        margin-top:12px;
+      }
+
+      .auth-link{
+        color:#cbd5e1;
+        text-decoration:none;
+        transition:.3s;
+      }
+
+      .auth-link:hover{
+        color:white;
+      }
+
+      .divider{
+        text-align:center;
+        margin:24px 0;
+        color:#64748b;
+        font-weight:700;
+      }
+
+      .google-btn{
+        width:100%;
+        padding:15px;
+
+        border:none;
+        cursor:pointer;
+
+        border-radius:14px;
+
+        font-weight:600;
+        font-size:15px;
+
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:12px;
+
+        background:
+        rgba(255,255,255,0.08);
+
+        color:white;
+
+        transition:.3s ease;
+      }
+
+      .google-btn img{
+        width:22px;
+        height:22px;
+      }
+
+      .google-btn:hover{
+        transform:
+        translateY(-2px);
+
+        background:
+        rgba(255,255,255,0.12);
+      }
+
+      .register-wrap{
+        margin-top:24px;
+        text-align:center;
+        color:#94a3b8;
+      }
+
+      @media(max-width:768px){
+
+        .login-card{
+          width:100%;
+          padding:28px;
+        }
+
+        .login-card h1{
+          font-size:30px;
+        }
+
+      }
+
+      `}</style>
+    </>
   );
 }
-
-const inputStyle = {
-  width: "100%",
-  padding: "14px",
-  marginBottom: "16px",
-  borderRadius: "12px",
-  border: "none",
-  outline: "none",
-  fontSize: "15px",
-  background:
-    "rgba(255,255,255,0.15)",
-  color: "white",
-};
-
-const loginButton = {
-  width: "100%",
-  padding: "14px",
-  background: "#2563eb",
-  color: "white",
-  border: "none",
-  borderRadius: "12px",
-  cursor: "pointer",
-  fontWeight: "bold",
-  fontSize: "16px",
-  transition: "0.3s",
-};
-
-const googleButton = {
-  width: "100%",
-  padding: "14px",
-  background: "white",
-  border: "none",
-  borderRadius: "12px",
-  cursor: "pointer",
-  fontWeight: "600",
-  fontSize: "15px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "12px",
-  boxShadow:
-    "0 2px 8px rgba(0,0,0,0.15)",
-};

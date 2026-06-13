@@ -233,15 +233,16 @@ function App() {
 
         {/* PROFILE */}
         <Route
-          path="/profile"
-          element={
-            <Profile
-              user={user}
-              cart={cart}
-              orders={orders}
-            />
-          }
-        />
+  path="/profile"
+  element={
+    <Profile
+      user={user}
+      cart={cart}
+      orders={orders}
+      wishlist={wishlist}
+    />
+  }
+/>
 
         <Route
   path="/saved-addresses"

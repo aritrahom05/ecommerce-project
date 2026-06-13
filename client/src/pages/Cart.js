@@ -1,78 +1,28 @@
 import {
-  useNavigate,
-  useLocation,
-} from "react-router-dom";
-import {
   useEffect,
   useState,
 } from "react";
 
+import {
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+
 const steps = [
   "Address",
-  "Order Summary",
+  "Summary",
   "Payment",
 ];
 
 const emptyAddress = {
   fullName: "",
   phone: "",
-  alternatePhone: "",
-  houseNo: "",
-  roadName: "",
-  landmark: "",
+  pincode: "",
   city: "",
   state: "",
-  pincode: "",
-  addressType: "Home",
+  houseNo: "",
+  roadName: "",
 };
-
-const buildCheckoutAddress = (
-  data = {}
-) => ({
-  fullName:
-    data.fullName || "",
-  phone: data.phone || "",
-  alternatePhone:
-    data.alternatePhone || "",
-  houseNo:
-    data.houseNo ||
-    data.addressLine1 ||
-    "",
-  roadName:
-    data.roadName ||
-    data.addressLine2 ||
-    "",
-  landmark:
-    data.landmark || "",
-  city: data.city || "",
-  state: data.state || "",
-  pincode:
-    data.pincode || "",
-  addressType:
-    data.addressType ||
-    "Home",
-});
-
-const buildSavedAddressPayload = (
-  address
-) => ({
-  fullName:
-    address.fullName,
-  phone: Number(address.phone),
-  addressLine1:
-    address.houseNo,
-  addressLine2:
-    address.roadName,
-  alternatePhone:
-    address.alternatePhone,
-  landmark:
-    address.landmark,
-  addressType:
-    address.addressType,
-  city: address.city,
-  state: address.state,
-  pincode: Number(address.pincode),
-});
 
 export default function Cart({
   cart,
@@ -85,25 +35,37 @@ export default function Cart({
   const location =
     useLocation();
 
-  const [address, setAddress] =
-    useState(emptyAddress);
+  const [
+    address,
+    setAddress,
+  ] = useState(
+    emptyAddress
+  );
 
-  const [savedAddresses, setSavedAddresses] =
-    useState([]);
+  const [
+    savedAddresses,
+    setSavedAddresses,
+  ] = useState([]);
 
   const [
     selectedAddressId,
     setSelectedAddressId,
+  ] = useState(null);
+
+  const [
+    step,
+    setStep,
+  ] = useState(1);
+
+  const [
+    savedOrder,
+    setSavedOrder,
+  ] = useState(null);
+
+  const [
+    checkoutError,
+    setCheckoutError,
   ] = useState("");
-
-  const [step, setStep] =
-    useState(1);
-
-  const [savedOrder, setSavedOrder] =
-    useState(null);
-
-  const [checkoutError, setCheckoutError] =
-    useState("");
 
   const queryParams =
     new URLSearchParams(
@@ -115,8 +77,12 @@ export default function Cart({
       "buyNow"
     ) === "true";
 
-  const [showCheckout, setShowCheckout] =
-    useState(isBuyNow);
+  const [
+    showCheckout,
+    setShowCheckout,
+  ] = useState(
+    isBuyNow
+  );
 
   const buyNowProduct =
     JSON.parse(
@@ -131,54 +97,24 @@ export default function Cart({
       ? [buyNowProduct]
       : cart;
 
-  useEffect(() => {
-    if (!user) {
-      setSavedAddresses([]);
-      return;
-    }
-
-    const loadSavedAddresses =
-      async () => {
-        const token =
-          localStorage.getItem(
-            "token"
-          );
-
-        if (!token) return;
-
-        const res =
-          await fetch(
-            "http://localhost:5000/api/addresses",
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
-
-        if (!res.ok) return;
-
-        const data =
-          await res.json();
-
-        setSavedAddresses(data);
-      };
-
-    loadSavedAddresses();
-  }, [user]);
-
   const groupedCart =
     finalCart.reduce(
-      (acc, item) => {
+      (
+        acc,
+        item
+      ) => {
         const existing =
           acc.find(
-            (cartItem) =>
-              cartItem._id === item._id
+            (x) =>
+              x._id ===
+              item._id
           );
 
-        if (existing) {
-          existing.quantity += 1;
+        if (
+          existing
+        ) {
+          existing.quantity +=
+            1;
         } else {
           acc.push({
             ...item,
@@ -193,247 +129,265 @@ export default function Cart({
 
   const total =
     groupedCart.reduce(
-      (acc, item) =>
+      (
+        acc,
+        item
+      ) =>
         acc +
-        item.price * item.quantity,
+        item.price *
+          item.quantity,
       0
     );
 
-  const addOneToCart = (product) => {
-    if (product.stock <= product.quantity) {
-      alert(
-        "No more stock available"
-      );
-      return;
-    }
+  useEffect(() => {
+    const fetchAddresses =
+      async () => {
+        if (!user) return;
 
-    setCart([...cart, product]);
-  };
+        const token =
+          localStorage.getItem(
+            "token"
+          );
 
-  const removeOneFromCart = (
-    productId
-  ) => {
-    const index = cart.findIndex(
-      (item) => item._id === productId
-    );
+        const res =
+          await fetch(
+            "http://localhost:5000/api/addresses",
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
 
-    if (index === -1) return;
+        const data =
+          await res.json();
 
-    setCart(
-      cart.filter(
-        (_, itemIndex) =>
-          itemIndex !== index
-      )
-    );
-  };
-
-  const removeProductFromCart = (
-    productId
-  ) => {
-    setCart(
-      cart.filter(
-        (item) => item._id !== productId
-      )
-    );
-  };
-
-  const updateAddress = (
-    name,
-    value
-  ) => {
-    setAddress({
-      ...address,
-      [name]: value,
-    });
-    setSelectedAddressId("");
-    setCheckoutError("");
-  };
-
-  const applySavedAddress = (
-    savedAddress
-  ) => {
-    setAddress(
-      buildCheckoutAddress(
-        savedAddress
-      )
-    );
-    setSelectedAddressId(
-      savedAddress._id
-    );
-    setCheckoutError("");
-  };
-
-  const validateAddress = () => {
-    const requiredFields = [
-      "fullName",
-      "phone",
-      "pincode",
-      "state",
-      "city",
-      "houseNo",
-      "roadName",
-    ];
-
-    const missingField =
-      requiredFields.find(
-        (field) =>
-          !String(
-            address[field] ?? ""
-          ).trim()
-      );
-
-    if (missingField) {
-      setCheckoutError(
-        "Warning: fill all the required details."
-      );
-      return false;
-    }
-
-    setCheckoutError("");
-    return true;
-  };
-
-  const validateStock = () => {
-    const invalidItem =
-      groupedCart.find(
-        (item) =>
-          item.quantity > item.stock
-      );
-
-    if (invalidItem) {
-      alert(
-        `${invalidItem.name} has only ${invalidItem.stock} stock available. Please reduce quantity.`
-      );
-      return false;
-    }
-
-    return true;
-  };
-
-  const goToSummary = async () => {
-    if (!user) {
-      alert(
-        "Please login first"
-      );
-      navigate("/login");
-      return;
-    }
-
-    if (!validateAddress()) {
-      return;
-    }
-
-    if (selectedAddressId) {
-      setStep(2);
-      return;
-    }
-
-    const token =
-      localStorage.getItem(
-        "token"
-      );
-
-    if (!token) {
-      alert(
-        "Please login first"
-      );
-      navigate("/login");
-      return;
-    }
-
-    const res = await fetch(
-      "http://localhost:5000/api/addresses",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type":
-            "application/json",
-          Authorization:
-            `Bearer ${token}`,
-        },
-        body: JSON.stringify(
-          buildSavedAddressPayload(
-            address
+        if (
+          Array.isArray(
+            data
           )
-        ),
-      }
-    );
+        ) {
+          setSavedAddresses(
+            data
+          );
+        }
+      };
 
-    const data = await res.json();
+    fetchAddresses();
+  }, [user]);
 
-    if (!res.ok) {
+  const updateAddress =
+    (
+      name,
+      value
+    ) => {
+      setAddress({
+        ...address,
+        [name]:
+          value,
+      });
+
       setCheckoutError(
-        data.message ||
-          "Warning: fill all the required details."
+        ""
       );
-      return;
-    }
+    };
 
-    setSavedAddresses([
-      data,
-      ...savedAddresses,
-    ]);
-    setSelectedAddressId(data._id);
-    setAddress(
-      buildCheckoutAddress(data)
-    );
-    setStep(2);
-  };
-
-  const startCheckout = () => {
-    if (!user) {
-      alert(
-        "Please login first"
+  const selectSavedAddress =
+    (addr) => {
+      setSelectedAddressId(
+        addr._id
       );
-      navigate("/login");
-      return;
-    }
 
-    if (groupedCart.length === 0) {
-      return;
-    }
+      setAddress({
+        fullName:
+          addr.fullName ||
+          "",
+        phone:
+          addr.phone || "",
+        pincode:
+          addr.pincode ||
+          "",
+        city:
+          addr.city || "",
+        state:
+          addr.state ||
+          "",
+        houseNo:
+          addr.addressLine1 ||
+          "",
+        roadName:
+          addr.addressLine2 ||
+          "",
+      });
+    };
+      const addOne =
+    (product) => {
+      if (
+        product.quantity >=
+        product.stock
+      ) {
+        alert(
+          "No stock left"
+        );
+        return;
+      }
 
-    if (!validateStock()) {
-      return;
-    }
+      setCart([
+        ...cart,
+        product,
+      ]);
+    };
 
-    setShowCheckout(true);
-    setStep(1);
-  };
+  const removeOne =
+    (id) => {
+      const index =
+        cart.findIndex(
+          (x) =>
+            x._id === id
+        );
 
-  const handleCheckout =
-    async () => {
+      if (
+        index === -1
+      )
+        return;
+
+      setCart(
+        cart.filter(
+          (_, i) =>
+            i !== index
+        )
+      );
+    };
+
+  const removeProduct =
+    (id) => {
+      setCart(
+        cart.filter(
+          (item) =>
+            item._id !== id
+        )
+      );
+    };
+
+  const validateAddress =
+    () => {
+      const required =
+        [
+          "fullName",
+          "phone",
+          "pincode",
+          "city",
+          "state",
+          "houseNo",
+          "roadName",
+        ];
+
+      const missing =
+        required.find(
+          (field) =>
+            !String(
+              address[
+                field
+              ] || ""
+            ).trim()
+        );
+
+      if (
+        missing
+      ) {
+        setCheckoutError(
+          "Please fill all required fields."
+        );
+        return false;
+      }
+
+      return true;
+    };
+
+  const validateStock =
+    () => {
+      const invalid =
+        groupedCart.find(
+          (item) =>
+            item.quantity >
+            item.stock
+        );
+
+      if (
+        invalid
+      ) {
+        alert(
+          `${invalid.name} only has ${invalid.stock} left`
+        );
+        return false;
+      }
+
+      return true;
+    };
+
+  const startCheckout =
+    () => {
       if (!user) {
         alert(
           "Please login first"
         );
 
-        navigate("/login");
+        navigate(
+          "/login"
+        );
+
         return;
       }
 
-      if (!validateAddress()) {
+      if (
+        !validateStock()
+      )
         return;
-      }
 
-      if (!validateStock()) {
+      setShowCheckout(
+        true
+      );
+
+      setStep(1);
+    };
+
+  const goToSummary =
+    () => {
+      if (
+        !validateAddress()
+      )
         return;
-      }
 
-      setStep(3);
+      setStep(2);
+    };
+
+  const processPayment =
+    async () => {
+      if (
+        !validateStock()
+      )
+        return;
 
       const options = {
         key: "rzp_test_Sc5yEFzMokiaFH",
-        amount: total * 100,
-        currency: "INR",
-        name: "Ecart",
+
+        amount:
+          total * 100,
+
+        currency:
+          "INR",
+
+        name:
+          "ECART",
+
         description:
           "Order Payment",
 
         handler:
-          async function (
+          async (
             response
-          ) {
+          ) => {
             const orderData =
               {
                 userId:
@@ -441,17 +395,21 @@ export default function Cart({
 
                 items:
                   groupedCart.map(
-                    (item) => ({
+                    (
+                      item
+                    ) => ({
                       productId:
                         item._id,
+
                       name:
                         item.name,
+
                       price:
                         item.price,
+
                       image:
                         item.image,
-                      description:
-                        item.description,
+
                       quantity:
                         item.quantity,
                     })
@@ -464,50 +422,45 @@ export default function Cart({
                   response.razorpay_payment_id,
 
                 shippingAddress:
-                  {
-                    ...address,
-                    phone:
-                      Number(
-                        address.phone
-                      ),
-                    pincode:
-                      Number(
-                        address.pincode
-                      ),
-                  },
+                  address,
               };
 
-            const res = await fetch(
-              "http://localhost:5000/api/orders",
-              {
-                method:
-                  "POST",
-                headers:
-                  {
-                    "Content-Type":
-                      "application/json",
-                  },
-                body: JSON.stringify(
-                  orderData
-                ),
-              }
-            );
+            const res =
+              await fetch(
+                "http://localhost:5000/api/orders",
+                {
+                  method:
+                    "POST",
 
-            if (!res.ok) {
-              const data =
-                await res.json();
+                  headers:
+                    {
+                      "Content-Type":
+                        "application/json",
+                    },
 
+                  body:
+                    JSON.stringify(
+                      orderData
+                    ),
+                }
+              );
+
+            const saved =
+              await res.json();
+
+            if (
+              !res.ok
+            ) {
               alert(
-                data.message ||
+                saved.message ||
                   "Order failed"
               );
               return;
             }
 
-            const saved =
-              await res.json();
-
-            if (!isBuyNow) {
+            if (
+              !isBuyNow
+            ) {
               setCart([]);
             }
 
@@ -515,8 +468,9 @@ export default function Cart({
               "buyNowProduct"
             );
 
-            setSavedOrder(saved);
-            setStep(4);
+            setSavedOrder(
+              saved
+            );
           },
 
         theme: {
@@ -532,357 +486,380 @@ export default function Cart({
 
       razor.open();
     };
+      return (
+    <>
+      {savedOrder && (
+        <div className="success-page">
 
-  if (savedOrder && step === 4) {
-    return (
-      <div style={successPageStyle}>
-        <div style={successCardStyle}>
-          <div style={successIconStyle}>
-            ✓
-          </div>
-          <h1>Order Successful</h1>
-          <p style={mutedStyle}>
-            Your payment is complete and your order has been placed.
-          </p>
-          <p style={mutedStyle}>
-            Order ID:{" "}
-            <strong>
-              {savedOrder._id}
-            </strong>
-          </p>
-          <p style={statusPillStyle}>
-            Status:{" "}
-            {savedOrder.status ||
-              "Pending"}
-          </p>
-          <button
-            onClick={() =>
-              navigate("/orders")
-            }
-            style={checkoutButton}
-          >
-            View My Orders
-          </button>
-          <button
-            onClick={() =>
-              navigate("/")
-            }
-            style={secondaryButton}
-          >
-            Continue Shopping
-          </button>
-        </div>
-      </div>
-    );
-  }
+          <div className="success-card">
 
-  if (!showCheckout) {
-    return (
-      <div style={cartPageStyle}>
-        <div style={cartHeaderStyle}>
-          <h1>Shopping Cart</h1>
-          <button
-            onClick={() =>
-              navigate("/")
-            }
-            style={textButtonStyle}
-          >
-            Continue Shopping
-          </button>
-        </div>
+            <div className="success-icon">
+              ✓
+            </div>
 
-        {groupedCart.length === 0 && (
-          <div style={emptyCartStyle}>
-            <h2>Your cart is empty</h2>
-            <p style={mutedStyle}>
-              Add products to your cart before checkout.
+            <h1>
+              Order Successful
+            </h1>
+
+            <p>
+              Payment completed successfully
             </p>
-          </div>
-        )}
 
-        {groupedCart.length > 0 && (
-          <div style={cartLayoutStyle}>
-            <div style={sectionStyle}>
-              <h2>Cart Items</h2>
+            <p>
+              Order ID:
+              <strong>
+                {" "}
+                {savedOrder._id}
+              </strong>
+            </p>
 
-              {groupedCart.map((item) => (
-                <div
-                  key={item._id}
-                  style={cartItemStyle}
-                >
-                  <div style={itemInfoStyle}>
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      style={imageStyle}
-                    />
-
-                    <div>
-                      <h3>{item.name}</h3>
-                      <p style={mutedStyle}>
-                        {item.description}
-                      </p>
-                      <h3 style={priceStyle}>
-                        Rs {item.price}
-                      </h3>
-                      <p style={mutedStyle}>
-                        Stock left:{" "}
-                        {item.stock}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div style={cartActionsStyle}>
-                    <div style={quantityBoxStyle}>
-                      <button
-                        onClick={() =>
-                          removeOneFromCart(
-                            item._id
-                          )
-                        }
-                        style={quantityButtonStyle}
-                      >
-                        -
-                      </button>
-                      <strong>
-                        {item.quantity}
-                      </strong>
-                      <button
-                        onClick={() =>
-                          addOneToCart(item)
-                        }
-                        style={quantityButtonStyle}
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <button
-                      onClick={() =>
-                        removeProductFromCart(
-                          item._id
-                        )
-                      }
-                      style={dangerButton}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div style={summaryStyle}>
-              <h2>Price Details</h2>
-              <div style={priceRowStyle}>
-                <span>Total items</span>
-                <span>
-                  {cart.length}
-                </span>
-              </div>
-              <div style={priceRowStyle}>
-                <span>Total amount</span>
-                <strong>
-                  Rs {total}
-                </strong>
-              </div>
-              <button
-                onClick={startCheckout}
-                style={checkoutButton}
-              >
-                Proceed to Checkout
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div style={checkoutPageStyle}>
-      <div style={checkoutHeaderStyle}>
-        <button
-          onClick={() => {
-            if (step === 1) {
-              if (isBuyNow) {
-                navigate(-1);
-              } else {
-                setShowCheckout(false);
+            <button
+              onClick={() =>
+                navigate(
+                  "/orders"
+                )
               }
-            } else {
-              setStep(step - 1);
-            }
-          }}
-          style={backButtonStyle}
-        >
-          ←
-        </button>
-        <h2 style={{ margin: 0 }}>
-          {step === 1
-            ? "Add delivery address"
-            : step === 2
-            ? "Order summary"
-            : "Payment"}
-        </h2>
-      </div>
+              className="main-btn"
+            >
+              View Orders
+            </button>
 
-      <div style={stepperStyle}>
-        {steps.map(
-          (label, index) => {
-            const number =
-              index + 1;
-            const active =
-              step >= number;
+          </div>
 
-            return (
-              <div
-                key={label}
-                style={stepItemStyle}
-              >
-                <div
-                  style={{
-                    ...stepCircleStyle,
-                    background:
-                      active
-                        ? "#2563eb"
-                        : "white",
-                    color: active
-                      ? "white"
-                      : "#2563eb",
-                  }}
-                >
-                  {number}
-                </div>
-                <span>{label}</span>
-              </div>
-            );
-          }
-        )}
-      </div>
-
-      {finalCart.length === 0 && (
-        <h2>Your cart is empty</h2>
+        </div>
       )}
 
-      {checkoutError && (
-        <p style={errorStyle}>
-          {checkoutError}
-        </p>
-      )}
+      {!savedOrder &&
+        !showCheckout && (
+          <div className="cart-page">
 
-      {groupedCart.length > 0 &&
-        step === 1 && (
-          <div style={sectionStyle}>
-            {savedAddresses.length >
-              0 && (
-              <div
-                style={
-                  savedAddressListStyle
+            <div className="page-header">
+
+              <h1>
+                Shopping Cart 🛒
+              </h1>
+
+              <button
+                onClick={() =>
+                  navigate("/")
                 }
+                className="text-btn"
               >
-                <h3 style={{ marginTop: 0 }}>
-                  Use saved address
-                </h3>
-                {savedAddresses.map(
-                  (savedAddress) => (
-                    <button
-                      key={
-                        savedAddress._id
-                      }
-                      type="button"
-                      onClick={() =>
-                        applySavedAddress(
-                          savedAddress
-                        )
-                      }
-                      style={{
-                        ...savedAddressButtonStyle,
-                        borderColor:
-                          selectedAddressId ===
-                          savedAddress._id
-                            ? "#2563eb"
-                            : "#d1d5db",
-                        background:
-                          selectedAddressId ===
-                          savedAddress._id
-                            ? "#eff6ff"
-                            : "white",
-                      }}
-                    >
-                      <strong>
-                        {
-                          savedAddress.fullName
-                        }
-                      </strong>
-                      <span>
-                        {
-                          savedAddress.phone
-                        }
-                      </span>
-                      <span>
-                        {
-                          savedAddress.addressLine1
-                        }
-                        ,{" "}
-                        {
-                          savedAddress.addressLine2
-                        }
-                        ,{" "}
-                        {savedAddress.city}
-                        ,{" "}
-                        {savedAddress.state} -{" "}
-                        {
-                          savedAddress.pincode
-                        }
-                      </span>
-                    </button>
-                  )
-                )}
+                Continue Shopping
+              </button>
+
+            </div>
+
+            {groupedCart.length ===
+              0 && (
+              <div className="empty-card">
+
+                <h2>
+                  Your Cart Is Empty
+                </h2>
+
+                <p>
+                  Add products before checkout
+                </p>
+
               </div>
             )}
 
-            <div style={formGridStyle}>
-              <input
-                placeholder="Full Name (Required) *"
-                value={address.fullName}
-                onChange={(e) =>
-                  updateAddress(
-                    "fullName",
-                    e.target.value
-                  )
-                }
-                style={inputStyle}
-              />
-              <input
-                type="number"
-                placeholder="Phone number (Required) *"
-                value={address.phone}
-                onChange={(e) =>
-                  updateAddress(
-                    "phone",
-                    e.target.value
-                  )
-                }
-                style={inputStyle}
-              />
-              <input
-                placeholder="Alternate phone number"
-                value={
-                  address.alternatePhone
-                }
-                onChange={(e) =>
-                  updateAddress(
-                    "alternatePhone",
-                    e.target.value
-                  )
-                }
-                style={inputStyle}
-              />
-              <div style={twoColumnStyle}>
+            {groupedCart.length >
+              0 && (
+              <div className="cart-layout">
+
+                <div className="glass-card">
+
+                  <h2>
+                    Cart Items
+                  </h2>
+
+                  {groupedCart.map(
+                    (
+                      item
+                    ) => (
+                      <div
+                        key={
+                          item._id
+                        }
+                        className="cart-product-row"
+                      >
+
+                        <img
+                          src={
+                            item.image
+                          }
+                          alt={
+                            item.name
+                          }
+                          className="cart-product-img"
+                        />
+
+                        <div className="item-info">
+
+                          <h3>
+                            {
+                              item.name
+                            }
+                          </h3>
+
+                          <p>
+                            Rs{" "}
+                            {
+                              item.price
+                            }
+                          </p>
+
+                        </div>
+
+                        <div className="qty-box">
+
+                          <button
+                            onClick={() =>
+                              removeOne(
+                                item._id
+                              )
+                            }
+                          >
+                            −
+                          </button>
+
+                          <span>
+                            {
+                              item.quantity
+                            }
+                          </span>
+
+                          <button
+                            onClick={() =>
+                              addOne(
+                                item
+                              )
+                            }
+                          >
+                            +
+                          </button>
+
+                        </div>
+
+                        <button
+                          onClick={() =>
+                            removeProduct(
+                              item._id
+                            )
+                          }
+                          className="remove-btn"
+                        >
+                          Remove
+                        </button>
+
+                      </div>
+                    )
+                  )}
+
+                </div>
+
+                <div className="cart-summary-card">
+
+                  <h2>
+                    Order Summary
+                  </h2>
+
+                  <div className="summary-row">
+
+                    <span>
+                      Items
+                    </span>
+
+                    <span>
+                      {
+                        cart.length
+                      }
+                    </span>
+
+                  </div>
+
+                  <div className="summary-row">
+
+                    <span>
+                      Total
+                    </span>
+
+                    <strong>
+                      Rs {total}
+                    </strong>
+
+                  </div>
+
+                  <button
+                    onClick={
+                      startCheckout
+                    }
+                    className="main-btn"
+                  >
+                    Proceed To Checkout
+                  </button>
+
+                </div>
+
+              </div>
+            )}
+
+          </div>
+      )}
+
+      {!savedOrder &&
+        showCheckout && (
+        <div className="checkout-page">
+
+          <div className="page-header">
+
+            <button
+              onClick={() =>
+                step === 1
+                  ? setShowCheckout(
+                      false
+                    )
+                  : setStep(
+                      step - 1
+                    )
+              }
+              className="back-btn"
+            >
+              ←
+            </button>
+
+            <h2>
+              Secure Checkout
+            </h2>
+
+          </div>
+
+          <div className="stepper">
+
+            {steps.map(
+              (
+                label,
+                index
+              ) => (
+                <div
+                  key={label}
+                  className="step-item"
+                >
+
+                  <div
+                    className={
+                      step >=
+                      index + 1
+                        ? "step-circle active"
+                        : "step-circle"
+                    }
+                  >
+                    {index + 1}
+                  </div>
+
+                  <span>
+                    {label}
+                  </span>
+
+                </div>
+              )
+            )}
+
+          </div>
+
+          {step === 1 && (
+            <div className="glass-card checkout-card">
+
+              <h2>
+                Delivery Address
+              </h2>
+
+              {savedAddresses.length > 0 && (
+                <div className="saved-address-list">
+
+                  <h3>
+                    Saved Addresses
+                  </h3>
+
+                  {savedAddresses.map(
+                    (addr) => (
+                      <div
+                        key={
+                          addr._id
+                        }
+                        onClick={() =>
+                          selectSavedAddress(
+                            addr
+                          )
+                        }
+                        className={
+                          selectedAddressId ===
+                          addr._id
+                            ? "address-card active-address"
+                            : "address-card"
+                        }
+                      >
+
+                        <strong>
+                          {
+                            addr.fullName
+                          }
+                        </strong>
+
+                        <p>
+                          {
+                            addr.addressLine1
+                          },{" "}
+                          {
+                            addr.city
+                          },{" "}
+                          {
+                            addr.state
+                          }
+                        </p>
+
+                      </div>
+                    )
+                  )}
+
+                </div>
+              )}
+
+              {checkoutError && (
+                <div className="error-box">
+                  {checkoutError}
+                </div>
+              )}
+
+              <div className="form-grid">
+                                <input
+                  placeholder="Full Name"
+                  value={address.fullName}
+                  onChange={(e) =>
+                    updateAddress(
+                      "fullName",
+                      e.target.value
+                    )
+                  }
+                  className="premium-input"
+                />
+
                 <input
-                  type="number"
-                  placeholder="Pincode (Required) *"
+                  placeholder="Phone Number"
+                  value={address.phone}
+                  onChange={(e) =>
+                    updateAddress(
+                      "phone",
+                      e.target.value
+                    )
+                  }
+                  className="premium-input"
+                />
+
+                <input
+                  placeholder="Pincode"
                   value={address.pincode}
                   onChange={(e) =>
                     updateAddress(
@@ -890,10 +867,11 @@ export default function Cart({
                       e.target.value
                     )
                   }
-                  style={inputStyle}
+                  className="premium-input"
                 />
+
                 <input
-                  placeholder="City (Required) *"
+                  placeholder="City"
                   value={address.city}
                   onChange={(e) =>
                     updateAddress(
@@ -901,547 +879,545 @@ export default function Cart({
                       e.target.value
                     )
                   }
-                  style={inputStyle}
+                  className="premium-input"
                 />
-              </div>
-              <input
-                placeholder="State (Required) *"
-                value={address.state}
-                onChange={(e) =>
-                  updateAddress(
-                    "state",
-                    e.target.value
-                  )
-                }
-                style={inputStyle}
-              />
-              <input
-                placeholder="House No., Building Name (Required) *"
-                value={address.houseNo}
-                onChange={(e) =>
-                  updateAddress(
-                    "houseNo",
-                    e.target.value
-                  )
-                }
-                style={inputStyle}
-              />
-              <input
-                placeholder="Road name, Area, Colony (Required) *"
-                value={address.roadName}
-                onChange={(e) =>
-                  updateAddress(
-                    "roadName",
-                    e.target.value
-                  )
-                }
-                style={inputStyle}
-              />
-              <input
-                placeholder="Nearby famous shop, mall, or landmark"
-                value={address.landmark}
-                onChange={(e) =>
-                  updateAddress(
-                    "landmark",
-                    e.target.value
-                  )
-                }
-                style={inputStyle}
-              />
 
-              <div>
-                <p style={labelStyle}>
-                  Type of address
-                </p>
-                <div style={buttonRowStyle}>
-                  {["Home", "Work"].map(
-                    (type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() =>
-                          updateAddress(
-                            "addressType",
-                            type
-                          )
-                        }
-                        style={{
-                          ...addressTypeButton,
-                          background:
-                            address.addressType ===
-                            type
-                              ? "#eff6ff"
-                              : "white",
-                          borderColor:
-                            address.addressType ===
-                            type
-                              ? "#2563eb"
-                              : "#d1d5db",
-                        }}
-                      >
-                        {type}
-                      </button>
+                <input
+                  placeholder="State"
+                  value={address.state}
+                  onChange={(e) =>
+                    updateAddress(
+                      "state",
+                      e.target.value
                     )
-                  )}
-                </div>
+                  }
+                  className="premium-input"
+                />
+
+                <input
+                  placeholder="House No"
+                  value={address.houseNo}
+                  onChange={(e) =>
+                    updateAddress(
+                      "houseNo",
+                      e.target.value
+                    )
+                  }
+                  className="premium-input"
+                />
+
+                <input
+                  placeholder="Road / Area"
+                  value={address.roadName}
+                  onChange={(e) =>
+                    updateAddress(
+                      "roadName",
+                      e.target.value
+                    )
+                  }
+                  className="premium-input"
+                />
+
+                <button
+                  onClick={
+                    goToSummary
+                  }
+                  className="main-btn"
+                >
+                  Continue
+                </button>
+
               </div>
 
-              <button
-                onClick={goToSummary}
-                style={saveAddressButton}
-              >
-                Save Address
-              </button>
             </div>
-          </div>
-        )}
+          )}
 
-      {groupedCart.length > 0 &&
-        step === 2 && (
-          <div style={summaryLayoutStyle}>
-            <div style={sectionStyle}>
-              <h2>Deliver to</h2>
-              <p style={mutedStyle}>
-                <strong>
-                  {address.fullName}
-                </strong>
-                , {address.phone}
-              </p>
-              <p style={mutedStyle}>
-                {address.houseNo},{" "}
-                {address.roadName}
-                {address.landmark
-                  ? `, ${address.landmark}`
-                  : ""}
-                , {address.city},{" "}
-                {address.state} -{" "}
-                {address.pincode}
-              </p>
-              <button
-                onClick={() =>
-                  setStep(1)
-                }
-                style={textButtonStyle}
-              >
-                Change address
-              </button>
-            </div>
+          {step === 2 && (
+            <div className="glass-card checkout-card">
 
-            <div style={sectionStyle}>
-              <h2>Order Summary</h2>
+              <h2>
+                Order Summary
+              </h2>
+
               {groupedCart.map(
                 (item) => (
                   <div
-                    key={item._id}
-                    style={cartItemStyle}
+                    key={
+                      item._id
+                    }
+                    className="summary-row"
                   >
-                    <div
-                      style={itemInfoStyle}
-                    >
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        style={imageStyle}
-                      />
+                    <span>
+                      {item.name} ×{" "}
+                      {
+                        item.quantity
+                      }
+                    </span>
 
-                      <div>
-                        <h3>
-                          {item.name}
-                        </h3>
-                        <p
-                          style={
-                            mutedStyle
-                          }
-                        >
-                          Qty:{" "}
-                          {
-                            item.quantity
-                          }
-                        </p>
-                        <h3
-                          style={
-                            priceStyle
-                          }
-                        >
-                          Rs{" "}
-                          {item.price *
-                            item.quantity}
-                        </h3>
-                      </div>
-                    </div>
-
-                    {!isBuyNow && (
-                      <button
-                        onClick={() =>
-                          removeProductFromCart(
-                            item._id
-                          )
-                        }
-                        style={
-                          dangerButton
-                        }
-                      >
-                        Remove
-                      </button>
-                    )}
+                    <strong>
+                      Rs{" "}
+                      {item.price *
+                        item.quantity}
+                    </strong>
                   </div>
                 )
               )}
-            </div>
 
-            <div style={summaryStyle}>
-              <h2>Price Details</h2>
-              <div style={priceRowStyle}>
-                <span>Items</span>
+              <div className="summary-row total-row">
+
                 <span>
-                  {groupedCart.length}
+                  Final Amount
                 </span>
-              </div>
-              <div style={priceRowStyle}>
-                <span>Total</span>
+
                 <strong>
                   Rs {total}
                 </strong>
-              </div>
-              <button
-                onClick={handleCheckout}
-                style={checkoutButton}
-              >
-                Continue to Payment
-              </button>
-            </div>
-          </div>
-        )}
 
-      {groupedCart.length > 0 &&
-        step === 3 && (
-          <div style={sectionStyle}>
-            <h1>Complete Payment</h1>
-            <p style={mutedStyle}>
-              Razorpay payment window is opening. Complete payment to place your order.
-            </p>
-            <button
-              onClick={handleCheckout}
-              style={checkoutButton}
-            >
-              Open Payment Again
-            </button>
-          </div>
-        )}
-    </div>
-  );
+              </div>
+
+              <button
+                onClick={() =>
+                  setStep(3)
+                }
+                className="main-btn"
+              >
+                Continue To Payment
+              </button>
+
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="glass-card checkout-card">
+
+              <h2>
+                Razorpay Payment 💳
+              </h2>
+
+              <p>
+                Secure payment gateway
+              </p>
+
+              <div className="summary-row total-row">
+
+                <span>
+                  Amount
+                </span>
+
+                <strong>
+                  Rs {total}
+                </strong>
+
+              </div>
+
+              <button
+                onClick={
+                  processPayment
+                }
+                className="pay-btn"
+              >
+                Pay Now
+              </button>
+
+            </div>
+          )}
+
+        </div>
+      )}
+
+<style>{`
+
+*{
+box-sizing:border-box;
 }
 
-const checkoutPageStyle = {
-  background: "#f3f4f6",
-  minHeight: "100vh",
-};
+.cart-page,
+.checkout-page,
+.success-page{
+min-height:100vh;
+padding:32px;
+background:
+linear-gradient(
+to right,
+#0f172a,
+#1e3a8a
+);
+}
 
-const cartPageStyle = {
-  background: "#f3f4f6",
-  minHeight: "100vh",
-  padding: "30px",
-};
+.page-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:28px;
+color:white;
+gap:12px;
+}
 
-const cartHeaderStyle = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: "16px",
-  flexWrap: "wrap",
-  marginBottom: "24px",
-};
+.page-header h1,
+.page-header h2{
+margin:0;
+color:white;
+}
 
-const emptyCartStyle = {
-  background: "white",
-  padding: "32px",
-  borderRadius: "8px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-};
+.glass-card,
+.cart-summary-card,
+.empty-card,
+.success-card{
+background:
+rgba(255,255,255,.12);
+backdrop-filter:
+blur(16px);
+border:
+1px solid rgba(255,255,255,.15);
+border-radius:24px;
+padding:24px;
+color:white;
+box-shadow:
+0 8px 24px rgba(0,0,0,.22);
 
-const cartLayoutStyle = {
-  display: "grid",
-  gridTemplateColumns:
-    "minmax(0, 1fr) minmax(280px, 360px)",
-  gap: "24px",
-  alignItems: "start",
-};
+transition:
+all .28s ease;
+}
 
-const cartActionsStyle = {
-  display: "flex",
-  gap: "12px",
-  alignItems: "center",
-  flexWrap: "wrap",
-};
+.glass-card:hover,
+.cart-summary-card:hover,
+.success-card:hover{
+transform:
+translateY(-4px);
+box-shadow:
+0 14px 30px rgba(
+37,99,235,.22
+);
+}
 
-const quantityBoxStyle = {
-  display: "flex",
-  alignItems: "center",
-  gap: "14px",
-  border: "1px solid #d1d5db",
-  borderRadius: "999px",
-  padding: "6px 10px",
-};
+.cart-layout{
+display:grid;
+grid-template-columns:
+2fr 1fr;
+gap:24px;
+align-items:start;
+}
 
-const quantityButtonStyle = {
-  width: "32px",
-  height: "32px",
-  border: "none",
-  borderRadius: "50%",
-  background: "#e5e7eb",
-  cursor: "pointer",
-  fontWeight: "bold",
-  fontSize: "18px",
-};
+.cart-summary-card{
+height:fit-content;
+position:sticky;
+top:20px;
+}
 
-const checkoutHeaderStyle = {
-  background: "white",
-  display: "flex",
-  gap: "16px",
-  alignItems: "center",
-  padding: "16px 24px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
-};
+.cart-product-row{
+display:grid;
+grid-template-columns:
+100px minmax(180px,1fr) 120px 100px;
+gap:18px;
+align-items:center;
+padding:16px 0;
+border-bottom:
+1px solid rgba(255,255,255,.08);
+min-height:120px;
+}
 
-const backButtonStyle = {
-  border: "none",
-  background: "transparent",
-  fontSize: "34px",
-  cursor: "pointer",
-  lineHeight: 1,
-};
+.cart-product-img{
+width:90px;
+height:90px;
+object-fit:contain;
+background:white;
+padding:8px;
+border-radius:12px;
+transition:
+transform .25s ease;
+}
 
-const stepperStyle = {
-  background: "white",
-  display: "flex",
-  justifyContent: "center",
-  gap: "36px",
-  padding: "18px",
-  borderBottom: "1px solid #e5e7eb",
-  flexWrap: "wrap",
-};
+.cart-product-row:hover .cart-product-img{
+transform:scale(1.05);
+}
 
-const stepItemStyle = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  color: "#111827",
-  fontSize: "14px",
-};
+.item-info{
+display:flex;
+flex-direction:column;
+gap:6px;
+}
 
-const stepCircleStyle = {
-  width: "28px",
-  height: "28px",
-  border: "1px solid #2563eb",
-  borderRadius: "50%",
-  display: "grid",
-  placeItems: "center",
-  fontWeight: "bold",
-  marginBottom: "6px",
-};
+.item-info h3{
+margin:0;
+}
 
-const sectionStyle = {
-  background: "white",
-  margin: "24px",
-  padding: "24px",
-  borderRadius: "8px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-};
+.item-info p{
+margin:0;
+color:#cbd5e1;
+}
 
-const formGridStyle = {
-  display: "grid",
-  gap: "18px",
-};
+.qty-box{
+display:flex;
+gap:10px;
+align-items:center;
+justify-content:center;
+}
 
-const savedAddressListStyle = {
-  display: "grid",
-  gap: "12px",
-  marginBottom: "24px",
-};
+.qty-box button{
+width:34px;
+height:34px;
+border:none;
+border-radius:50%;
+cursor:pointer;
+font-weight:bold;
+}
 
-const savedAddressButtonStyle = {
-  display: "grid",
-  gap: "6px",
-  width: "100%",
-  textAlign: "left",
-  padding: "14px",
-  border: "1px solid #d1d5db",
-  borderRadius: "8px",
-  cursor: "pointer",
-  color: "#111827",
-};
+.remove-btn{
+background:#dc2626;
+color:white;
+border:none;
+padding:10px 14px;
+border-radius:10px;
+cursor:pointer;
+}
 
-const twoColumnStyle = {
-  display: "grid",
-  gridTemplateColumns:
-    "repeat(auto-fit, minmax(240px, 1fr))",
-  gap: "18px",
-};
+.summary-row{
+display:flex;
+justify-content:space-between;
+padding:14px 0;
+border-bottom:
+1px solid rgba(255,255,255,.08);
+}
 
-const cartItemStyle = {
-  padding: "20px",
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: "20px",
-  borderBottom: "1px solid #e5e7eb",
-  flexWrap: "wrap",
-};
+.total-row{
+font-size:18px;
+font-weight:bold;
+}
 
-const itemInfoStyle = {
-  display: "flex",
-  gap: "20px",
-  alignItems: "center",
-  flexWrap: "wrap",
-};
+.main-btn,
+.pay-btn{
+width:100%;
+margin-top:18px;
+padding:14px;
+border:none;
+border-radius:14px;
+cursor:pointer;
+font-weight:700;
+color:white;
+background:
+linear-gradient(
+135deg,
+#2563eb,
+#1d4ed8
+);
 
-const imageStyle = {
-  width: "120px",
-  height: "120px",
-  objectFit: "cover",
-  borderRadius: "12px",
-};
+transition:
+all .25s ease;
+position:relative;
+overflow:hidden;
+}
 
-const mutedStyle = {
-  color: "#6b7280",
-};
+.main-btn:hover,
+.pay-btn:hover{
+transform:
+translateY(-3px);
+box-shadow:
+0 10px 24px rgba(
+59,130,246,.35
+);
+}
 
-const priceStyle = {
-  color: "#2563eb",
-};
+.main-btn:active,
+.pay-btn:active{
+transform:scale(.98);
+}
 
-const dangerButton = {
-  background: "#ef4444",
-  color: "white",
-  border: "none",
-  padding: "12px 18px",
-  borderRadius: "8px",
-  cursor: "pointer",
-  fontWeight: "bold",
-};
+.pay-btn{
+background:
+linear-gradient(
+135deg,
+#16a34a,
+#15803d
+);
+}
 
-const summaryStyle = {
-  background: "white",
-  margin: "24px",
-  padding: "24px",
-  borderRadius: "8px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-};
+.text-btn,
+.back-btn{
+background:none;
+border:none;
+cursor:pointer;
+color:#60a5fa;
+font-weight:bold;
+font-size:16px;
+}
 
-const inputStyle = {
-  padding: "17px",
-  border: "1px solid #d1d5db",
-  borderRadius: "4px",
-  fontSize: "16px",
-};
+.stepper{
+display:flex;
+justify-content:center;
+gap:26px;
+margin-bottom:24px;
+flex-wrap:wrap;
+}
 
-const checkoutButton = {
-  marginTop: "20px",
-  width: "100%",
-  padding: "15px",
-  background: "#2563eb",
-  color: "white",
-  border: "none",
-  borderRadius: "10px",
-  fontSize: "18px",
-  fontWeight: "bold",
-  cursor: "pointer",
-};
+.step-item{
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:8px;
+color:white;
+}
 
-const saveAddressButton = {
-  ...checkoutButton,
-  background: "#f97316",
-};
+.step-circle{
+width:34px;
+height:34px;
+border-radius:50%;
+display:grid;
+place-items:center;
+border:1px solid white;
+transition:
+all .25s ease;
+}
 
-const secondaryButton = {
-  ...checkoutButton,
-  background: "#111827",
-};
+.step-circle.active{
+background:#2563eb;
+border:none;
 
-const labelStyle = {
-  color: "#475569",
-  marginBottom: "10px",
-};
+transform:
+scale(1.08);
 
-const buttonRowStyle = {
-  display: "flex",
-  gap: "12px",
-  flexWrap: "wrap",
-};
+box-shadow:
+0 0 18px rgba(
+59,130,246,.35
+);
+}
 
-const addressTypeButton = {
-  minWidth: "120px",
-  padding: "12px 18px",
-  border: "1px solid #d1d5db",
-  borderRadius: "999px",
-  cursor: "pointer",
-  fontSize: "16px",
-};
+.checkout-card{
+max-width:850px;
+margin:auto;
+}
 
-const errorStyle = {
-  margin: "24px",
-  background: "#fee2e2",
-  color: "#b91c1c",
-  padding: "12px",
-  borderRadius: "8px",
-};
+.form-grid{
+display:grid;
+gap:14px;
+}
 
-const summaryLayoutStyle = {
-  display: "grid",
-  gridTemplateColumns:
-    "minmax(0, 1fr)",
-};
+.premium-input{
+width:100%;
+padding:15px;
+border:none;
+outline:none;
+border-radius:14px;
+background:
+rgba(255,255,255,.14);
+color:white;
+border:
+1px solid rgba(255,255,255,.12);
+}
 
-const textButtonStyle = {
-  background: "transparent",
-  border: "none",
-  color: "#2563eb",
-  padding: 0,
-  cursor: "pointer",
-  fontWeight: "bold",
-};
+.premium-input::placeholder{
+color:#cbd5e1;
+}
 
-const priceRowStyle = {
-  display: "flex",
-  justifyContent: "space-between",
-  padding: "12px 0",
-  borderBottom: "1px solid #e5e7eb",
-};
+.saved-address-list{
+display:grid;
+gap:12px;
+margin-bottom:20px;
+}
 
-const successPageStyle = {
-  minHeight: "100vh",
-  display: "grid",
-  placeItems: "center",
-  background: "#f3f4f6",
-  padding: "24px",
-};
+.address-card{
+padding:14px;
+border-radius:14px;
+background:
+rgba(255,255,255,.08);
+border:
+1px solid rgba(255,255,255,.12);
+cursor:pointer;
 
-const successCardStyle = {
-  background: "white",
-  width: "min(520px, 100%)",
-  textAlign: "center",
-  borderRadius: "12px",
-  padding: "36px",
-  boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-};
+transition:
+all .25s ease;
+}
 
-const successIconStyle = {
-  width: "72px",
-  height: "72px",
-  borderRadius: "50%",
-  background: "#16a34a",
-  color: "white",
-  display: "grid",
-  placeItems: "center",
-  fontSize: "42px",
-  margin: "0 auto 18px",
-};
+.address-card:hover{
+transform:
+translateY(-3px);
+box-shadow:
+0 8px 18px rgba(
+255,255,255,.08
+);
+}
 
-const statusPillStyle = {
-  display: "inline-block",
-  background: "#dcfce7",
-  color: "#166534",
-  padding: "10px 14px",
-  borderRadius: "999px",
-  fontWeight: "bold",
-};
+.active-address{
+border:
+1px solid #3b82f6;
+box-shadow:
+0 0 14px rgba(
+59,130,246,.3
+);
+}
+
+.error-box{
+background:
+rgba(239,68,68,.18);
+padding:12px;
+border-radius:12px;
+margin-bottom:14px;
+color:#fecaca;
+}
+
+.success-page{
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.success-card{
+width:500px;
+text-align:center;
+}
+
+.success-icon{
+width:70px;
+height:70px;
+border-radius:50%;
+background:#16a34a;
+display:grid;
+place-items:center;
+font-size:38px;
+margin:0 auto 18px;
+}
+
+@media(max-width:768px){
+
+.cart-layout{
+grid-template-columns:1fr;
+}
+
+.cart-summary-card{
+position:static;
+}
+
+.cart-product-row{
+grid-template-columns:1fr;
+text-align:center;
+min-height:auto;
+transition:
+all .25s ease;
+border-radius:14px;
+padding-left:10px;
+padding-right:10px;
+}
+
+.cart-product-row:hover{
+background:
+rgba(255,255,255,.05);
+
+transform:
+translateX(4px);
+}
+
+.cart-product-img{
+margin:auto;
+}
+
+.page-header{
+flex-direction:column;
+align-items:flex-start;
+}
+
+}
+
+`}</style>
+
+    </>
+  );
+}
